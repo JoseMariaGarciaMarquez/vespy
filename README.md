@@ -33,11 +33,6 @@ project_folder/
 │   ├── vespy.py
 │── images/
 ```
-Las imágenes se referencian utilizando la siguiente ruta dentro del código:
-```python
-from pathlib import Path
-image_path = Path(__file__).parent / 'images'
-```
 
 ## Formato de Datos Requerido
 Para garantizar un correcto procesamiento, los datos deben estar en el siguiente formato:
