@@ -25,6 +25,26 @@ conda activate pg
 pip install numpy pandas matplotlib scipy tkinter
 ```
 
+## Nota sobre la Estructura de Archivos
+VESPY ahora está organizado en una carpeta con la siguiente estructura:
+```
+project_folder/
+│── src/
+│   ├── vespy.py
+│── images/
+```
+Las imágenes se referencian utilizando la siguiente ruta dentro del código:
+```python
+from pathlib import Path
+image_path = Path(__file__).parent / 'images'
+```
+
+## Formato de Datos Requerido
+Para garantizar un correcto procesamiento, los datos deben estar en el siguiente formato:
+```
+AB/2    MN/2    K    PN    PI    I (Ma)    ∆V (Mv)    pa (Ω*m)
+```
+
 ## Funcionalidades
 ### **Carga y Guardado de Datos**
 - `load_data()`: Carga datos desde un archivo Excel.
@@ -62,7 +82,7 @@ pip install numpy pandas matplotlib scipy tkinter
 ## Instalación y Uso
 1. **Ejecutar la aplicación:**
    ```markdown
-   python vespy.py
+   python src/vespy.py
    ```
 
 ## Contribución
@@ -108,4 +128,3 @@ Gratis:
     Jesús Limón
     Erik Robinson Trincado Cabezas
 ```
-
