@@ -78,6 +78,7 @@ import os
 import webbrowser
 import numpy as np
 import pandas as pd
+from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.fft import fft, fftfreq
@@ -164,8 +165,8 @@ class SEVApp(QMainWindow):
         self.setGeometry(100, 100, 1600, 900)  # Ventana más grande
         
         # Obtener ruta de la carpeta de imágenes
-        from pathlib import Path
-        image_path = Path(__file__).parent / 'images'
+        
+        image_path = Path(__file__).parent.parent / 'images'
         self.setWindowIcon(QIcon(str(image_path / "logo.png")))
 
         # Crear widget central
