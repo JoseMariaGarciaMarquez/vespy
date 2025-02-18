@@ -21,7 +21,6 @@ Métodos Principales:
 - generate_2d_plot: Genera un gráfico 2D interpolado.
 - load_inverted_models: Carga modelos invertidos desde archivos.
 - save_model: Guarda el modelo de inversión actual.
-- save_inversion_model: Guarda el modelo de inversión sin expandir los puntos.
 - find_water: Clasifica los datos para identificar posibles acuíferos.
 - plot_classified_layers: Visualiza el modelo con clasificaciones litológicas.
 
@@ -75,7 +74,6 @@ Gratis:
 """
 import sys
 import os
-import scipy
 import webbrowser
 import numpy as np
 import pandas as pd
@@ -87,31 +85,17 @@ from scipy.interpolate import griddata
 from scipy.signal import savgol_filter
 import pygimli as pg
 from pygimli.physics import VESManager
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QInputDialog, QFileDialog
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, 
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, 
                              QTableWidget, QTableWidgetItem, QComboBox, QDoubleSpinBox, 
                              QSpinBox, QLabel, QGroupBox, QToolBar, QAction, QPushButton, 
-                             QTabWidget, QTextEdit, QLineEdit, QApplication)
+                             QTabWidget, QTextEdit, QLineEdit, QInputDialog)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib.colors import Normalize, Colormap
-from scipy.optimize import least_squares
+from matplotlib.colors import Normalize
 from matplotlib import cm
-
 from mpl_toolkits.mplot3d import Axes3D
-import os
-from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QToolBar,
-    QAction, QLabel, QPushButton, QSpinBox, QDoubleSpinBox, QGroupBox,
-    QComboBox, QTextEdit, QTableWidget
-)
-from PyQt5.QtGui import QIcon
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import QSize
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
 class WelcomeWindow(QMainWindow):
@@ -272,7 +256,7 @@ class SEVApp(QMainWindow):
         self.lambda_spin.setValue(20)
 
         self.lambda_factor_spin = QDoubleSpinBox()
-        self.lambda_factor_spin.setRange(0.1, 10.0)
+        self.lambda_factor_spin.setRange(0.1, 100.0)
         self.lambda_factor_spin.setSingleStep(0.1)
         self.lambda_factor_spin.setValue(0.8)
 
@@ -432,30 +416,7 @@ class SEVApp(QMainWindow):
         model = self.model_selector.currentText()
 
 
-    def save_inversion_model(self):
-        """Guardar el modelo de inversión sin expandir los puntos."""
-        # Verificar que `self.depths` y `self.resistivity` contengan datos válidos
-        if self.depths is None or self.resistivity is None:
-            self.eda_output.append("Error: No hay modelo de inversión para guardar.")
-            return
 
-        if self.depths.size == 0 or self.resistivity.size == 0:
-            self.eda_output.append("Error: Los datos de profundidad o resistividad están vacíos.")
-            return
-
-        # Asignar la posición X de este modelo en función de los modelos previos
-        x_position = len(self.saved_models) * self.spacing_spin.value()
-
-        # Crear y guardar el modelo en `self.saved_models` con su profundidad y resistividad originales
-        model_data = {
-            "depths": self.depths,  
-            "resistivity": self.resistivity, 
-            "x_position": x_position
-        }
-        
-        # Llama a las funciones saved models y eda output
-        self.saved_models.append(model_data)
-        self.eda_output.append(f"Modelo guardado en posición X = {x_position} m.")
 
     def load_inverted_models(self):
         """Cargar modelos invertidos desde archivos Excel o CSV."""
@@ -483,14 +444,15 @@ class SEVApp(QMainWindow):
             depths = df['Profundidad (m)'].values
             resistivity = df['Resistividad (Ω*m)'].values
 
+            # Calcular las profundidades acumuladas
+            cumulative_depths = np.cumsum(thickness)
 
             # Guardar el modelo cargado usando save_model
-            self.depths = depths
+            self.depths = cumulative_depths
             self.resistivity = resistivity
             self.save_model()
 
             self.eda_output.append(f"Modelo cargado desde: {file}")
-
 
 
     def generate_2d_plot(self):
@@ -517,10 +479,11 @@ class SEVApp(QMainWindow):
                 resistivities = [resistivities[0]] + resistivities
 
             # Agregar puntos para cada capa según su espesor y resistividad
-            for i in range(1, len(depths)):
-                depth_range = range(int(depths[i-1]), int(depths[i]))
-                resistivity_value = resistivities[i-1]
-                for depth in depth_range:
+            for i in range(len(depths) - 1):
+                depth_start = depths[i]
+                depth_end = depths[i + 1]
+                resistivity_value = resistivities[i]
+                for depth in np.linspace(depth_start, depth_end, num=int(depth_end - depth_start), endpoint=False):
                     all_x_positions.append(x_position)
                     all_depths.append(depth)
                     all_resistivities.append(resistivity_value)
@@ -660,6 +623,13 @@ class SEVApp(QMainWindow):
             self.data = pd.read_excel(file_path)
             self.data.columns = self.data.columns.str.strip()  # Quita espacios en los nombres de columnas
             self.data = self.data.dropna()  # Eliminar filas con valores NaN
+            
+            # Verificar que los encabezados sean correctos
+            required_columns = ['AB/2', 'MN/2', 'K', 'PN', 'PI', 'I (Ma)', '∆V (Mv)', 'pa (Ω*m)']
+            for col in required_columns:
+                if col not in self.data.columns:
+                    self.eda_output.append(f"Error: Falta la columna '{col}' en el archivo Excel.")
+                    return
             
             # Extraer el nombre del archivo para las pestañas
             self.current_file = os.path.splitext(os.path.basename(file_path))[0]
