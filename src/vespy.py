@@ -417,7 +417,6 @@ class SEVApp(QMainWindow):
 
 
 
-
     def load_inverted_models(self):
         """Cargar modelos invertidos desde archivos Excel o CSV."""
         options = QFileDialog.Options()
@@ -427,7 +426,7 @@ class SEVApp(QMainWindow):
 
         for file in files:
             if file.endswith('.xlsx'):
-                df = pd.read_excel(file)
+                df = pd.read_excel(file)    
             elif file.endswith('.csv'):
                 df = pd.read_csv(file)
             else:
@@ -458,6 +457,24 @@ class SEVApp(QMainWindow):
     def generate_2d_plot(self):
         """Generar el gráfico 2D interpolado de resistividad en función de la profundidad y distancia."""
 
+        def subdividir_puntos(df):
+            """Subdividir puntos según el espesor."""
+            nuevos_puntos = []
+            for _, row in df.iterrows():
+                espesor = row["Espesor"]
+                profundidad = row["Profundidad"]
+                resistividad = row["Resistividad"]
+                posicion = row["Posicion"]
+                
+                if espesor < 10:
+                    subdivisiones = np.linspace(0.1, espesor, num=int(espesor * 10))
+                else:
+                    subdivisiones = [espesor]
+                
+                for sub in subdivisiones:
+                    nuevos_puntos.append((posicion, sub, profundidad, resistividad))
+            
+            return np.array(nuevos_puntos)
         if len(self.saved_models) + len(self.loaded_models) < 2:
             self.eda_output.append("Se necesitan al menos dos modelos para generar el mapa 2D.")
             return
@@ -473,30 +490,28 @@ class SEVApp(QMainWindow):
             depths = list(model["depths"])  # Convertir RVector a lista
             resistivities = list(model["resistivity"])  # Convertir RVector a lista
 
-            # Asegurarse de que cada modelo empiece en profundidad 0
-            if depths[0] != 0:
-                depths = [0] + depths
-                resistivities = [resistivities[0]] + resistivities
+            # Crear DataFrame temporal para usar subdividir_puntos
+            temp_df = pd.DataFrame({
+                "Espesor": np.diff([0] + depths),
+                "Profundidad": depths,
+                "Resistividad": resistivities,
+                "Posicion": [x_position] * len(depths)
+            })
 
-            # Agregar puntos para cada capa según su espesor y resistividad
-            for i in range(len(depths) - 1):
-                depth_start = depths[i]
-                depth_end = depths[i + 1]
-                resistivity_value = resistivities[i]
-                for depth in np.linspace(depth_start, depth_end, num=int(depth_end - depth_start), endpoint=False):
-                    all_x_positions.append(x_position)
-                    all_depths.append(depth)
-                    all_resistivities.append(resistivity_value)
+            # Subdividir puntos
+            nuevos_puntos = subdividir_puntos(temp_df)
+
+            # Agregar puntos subdivididos a las listas
+            all_x_positions.extend(nuevos_puntos[:, 0])
+            all_depths.extend(nuevos_puntos[:, 2])
+            all_resistivities.extend(nuevos_puntos[:, 3])
 
             # Añadir la posición X al conjunto para etiquetar
             x_positions_set.add((x_position, f"sev-{idx + 1}"))
 
-        # Obtener la resolución de interpolación seleccionada por el usuario
-        resolution = self.resolution_spin.value()
-
-        # Crear la cuadrícula para la interpolación
-        grid_x = np.linspace(min(all_x_positions), max(all_x_positions), resolution)
-        grid_y = np.linspace(min(all_depths), max(all_depths), resolution)
+        # Crear una grilla para interpolar
+        grid_x = np.linspace(min(all_x_positions), max(all_x_positions), 100)
+        grid_y = np.linspace(min(all_depths), max(all_depths), 100)
         grid_x, grid_y = np.meshgrid(grid_x, grid_y)
 
         # Interpolación de resistividad
@@ -504,7 +519,7 @@ class SEVApp(QMainWindow):
             points=(all_x_positions, all_depths),
             values=all_resistivities,
             xi=(grid_x, grid_y),
-            method=self.interpolation_combo.currentText()
+            method='linear'
         )
 
         # Normalizar los valores para evitar negativos
