@@ -457,25 +457,6 @@ class SEVApp(QMainWindow):
 
     def generate_2d_plot(self):
         """Generar el gráfico 2D interpolado de resistividad en función de la profundidad y distancia."""
-
-        def subdividir_puntos(df):
-            """Subdividir puntos según el espesor."""
-            nuevos_puntos = []
-            for _, row in df.iterrows():
-                espesor = row["Espesor"]
-                profundidad = row["Profundidad"]
-                resistividad = row["Resistividad"]
-                posicion = row["Posicion"]
-                
-                if espesor < 10:
-                    subdivisiones = np.linspace(0.1, espesor, num=int(espesor * 10))
-                else:
-                    subdivisiones = [espesor]
-                
-                for sub in subdivisiones:
-                    nuevos_puntos.append((posicion, sub, profundidad, resistividad))
-            
-            return np.array(nuevos_puntos)
         if len(self.saved_models) + len(self.loaded_models) < 2:
             self.eda_output.append("Se necesitan al menos dos modelos para generar el mapa 2D.")
             return
@@ -486,29 +467,19 @@ class SEVApp(QMainWindow):
         all_resistivities = []
         x_positions_set = set()
 
-        for idx, model in enumerate(self.saved_models + self.loaded_models):
+        for model in self.saved_models + self.loaded_models:
             x_position = model["x_position"]
+            sev_number = model.get("sev_number", "N/A")
             depths = list(model["depths"])  # Convertir RVector a lista
             resistivities = list(model["resistivity"])  # Convertir RVector a lista
 
-            # Crear DataFrame temporal para usar subdividir_puntos
-            temp_df = pd.DataFrame({
-                "Espesor": np.diff([0] + depths),
-                "Profundidad": depths,
-                "Resistividad": resistivities,
-                "Posicion": [x_position] * len(depths)
-            })
-
-            # Subdividir puntos
-            nuevos_puntos = subdividir_puntos(temp_df)
-
-            # Agregar puntos subdivididos a las listas
-            all_x_positions.extend(nuevos_puntos[:, 0])
-            all_depths.extend(nuevos_puntos[:, 2])
-            all_resistivities.extend(nuevos_puntos[:, 3])
+            # Agregar puntos a las listas
+            all_x_positions.extend([x_position] * len(depths))
+            all_depths.extend(depths)
+            all_resistivities.extend(resistivities)
 
             # Añadir la posición X al conjunto para etiquetar
-            x_positions_set.add((x_position, f"sev-{idx + 1}"))
+            x_positions_set.add((x_position, f"SEV-{sev_number}"))
 
         # Crear una grilla para interpolar
         grid_x = np.linspace(min(all_x_positions), max(all_x_positions), 100)
@@ -1027,6 +998,14 @@ class SEVApp(QMainWindow):
             self.eda_output.append("Carga del modelo cancelada.")
             return
 
+        # Solicitar el número de SEV del usuario
+        sev_number, ok = QInputDialog.getInt(self, "Número de SEV", "Ingrese el número de SEV para el modelo cargado:", 0, 0, 10000, 1)
+        if not ok:
+            if self.saved_models:
+                sev_number = self.saved_models[-1].get("sev_number", 0) + 1
+            else:
+                sev_number = 1
+
         if self.depths is None or self.resistivity is None:
             self.eda_output.append("Error: No hay modelo de inversión para guardar.")
             return
@@ -1037,14 +1016,15 @@ class SEVApp(QMainWindow):
 
         # Crear y guardar el modelo en `self.saved_models` con su profundidad y resistividad originales
         model_data = {
-            "depths": self.depths,  
-            "resistivity": self.resistivity, 
+            "depths": self.depths,
+            "resistivity": self.resistivity,
             "x_position": x_position,
-            "y_position": y_position  # Añadir coordenada Y
+            "y_position": y_position,
+            "sev_number": sev_number  # Añadir número de SEV
         }
-        
+
         self.saved_models.append(model_data)
-        self.eda_output.append(f"Modelo guardado en posición X = {x_position} m, Y = {y_position} m.")
+        self.eda_output.append(f"Modelo guardado en posición X = {x_position} m, Y = {y_position} m, SEV = {sev_number}.")
 
 def main():
     app = QApplication(sys.argv)
