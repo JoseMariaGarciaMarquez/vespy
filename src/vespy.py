@@ -99,6 +99,7 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
 
+
 class WelcomeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
