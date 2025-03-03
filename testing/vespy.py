@@ -99,6 +99,7 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
 
+
 class WelcomeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -655,16 +656,33 @@ class SEVApp(QMainWindow):
                 self.data.to_excel(file_path, index=False)
 
 
-
     def realizar_empalme(self):
         """Generar el empalme y almacenarlo internamente."""
         if self.data is not None:
-            # Generar el empalme para 'pa (Ω*m)'
-            empalme_data = self.data.groupby('AB/2')['pa (Ω*m)'].mean().reset_index()
+            empalme_data = self.data.copy()
+            ab2 = empalme_data['AB/2'].values
+            rhoa = empalme_data['pa (Ω*m)'].values
             
-            # Ajustar 'MN/2' para que coincida con el empalme de 'AB/2'
-            empalme_data['MN/2'] = self.data.groupby('AB/2')['MN/2'].first().values
+            # Crear un diccionario para almacenar los valores únicos de AB/2 y sus resistividades
+            unique_ab2 = {}
+            for i in range(len(ab2)):
+                if ab2[i] not in unique_ab2:
+                    unique_ab2[ab2[i]] = []
+                unique_ab2[ab2[i]].append(rhoa[i])
             
+            # Calcular el empalme
+            empalme_ab2 = []
+            empalme_rhoa = []
+            for key in sorted(unique_ab2.keys()):
+                values = unique_ab2[key]
+                if len(values) > 1:
+                    empalme_rhoa.append(sum(values))
+                else:
+                    empalme_rhoa.append(values[0])
+                empalme_ab2.append(key)
+            
+            # Crear un nuevo DataFrame con los datos de empalme
+            empalme_data = pd.DataFrame({'AB/2': empalme_ab2, 'pa (Ω*m)': empalme_rhoa})
             self.empalme_data = empalme_data
             self.plot_data(empalme=True)
 
