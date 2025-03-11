@@ -99,7 +99,6 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
 
-
 class WelcomeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -407,9 +406,9 @@ class SEVApp(QMainWindow):
         control_panel.addWidget(self.generate_2d_button)
 
         # Añadir botón para generar el gráfico 3D
-        self.generate_3d_button = QPushButton("Generar Gráfico 3D")
-        self.generate_3d_button.clicked.connect(self.generate_3d_plot)
-        control_panel.addWidget(self.generate_3d_button)
+        self.save_2d_button = QPushButton("Guardar Figura 2D")
+        self.save_2d_button.clicked.connect(self.save_2d_figure)
+        control_panel.addWidget(self.save_2d_button)
 
 # FUNCIONES DE LA APP VESPY
 
@@ -528,6 +527,13 @@ class SEVApp(QMainWindow):
         # Dibujar el gráfico actualizado en el canvas
         self.canvas_2d.draw()
 
+    def save_2d_figure(self):
+        """Guardar la figura 2D generada."""
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getSaveFileName(self, "Guardar Figura 2D", "", "PNG Files (*.png);;JPEG Files (*.jpg);;All Files (*)", options=options)
+        if file_path:
+            self.figure_2d.savefig(file_path)
+            self.eda_output.append(f"Figura 2D guardada en: {file_path}")
 
     def generate_3d_plot(self):
         """Generar el gráfico 3D interpolado de resistividad en función de la profundidad, distancia X y distancia Y."""
