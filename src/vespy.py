@@ -405,7 +405,7 @@ class SEVApp(QMainWindow):
         self.generate_2d_button.clicked.connect(self.generate_2d_plot)
         control_panel.addWidget(self.generate_2d_button)
 
-        # Añadir botón para generar el gráfico 3D
+        # Botón para guardar el gráfico 2D
         self.save_2d_button = QPushButton("Guardar Figura 2D")
         self.save_2d_button.clicked.connect(self.save_2d_figure)
         control_panel.addWidget(self.save_2d_button)
@@ -499,7 +499,7 @@ class SEVApp(QMainWindow):
         )
 
         # Normalizar los valores para evitar negativos
-        grid_z = np.where(grid_z < 0, 0, grid_z)  # Reemplazar valores negativos por 0
+        grid_z = np.where(grid_z < 0, 0, grid_z) 
 
         # Limpiar la figura y agregar el nuevo gráfico
         self.figure_2d.clear()
@@ -535,81 +535,7 @@ class SEVApp(QMainWindow):
             self.figure_2d.savefig(file_path)
             self.eda_output.append(f"Figura 2D guardada en: {file_path}")
 
-    def generate_3d_plot(self):
-        """Generar el gráfico 3D interpolado de resistividad en función de la profundidad, distancia X y distancia Y."""
 
-        if len(self.saved_models) + len(self.loaded_models) < 2:
-            self.eda_output.append("Se necesitan al menos dos modelos para generar el mapa 3D.")
-            return
-
-        # Recoger datos de profundidad y resistividad
-        all_depths = []
-        all_x_positions = []
-        all_y_positions = []
-        all_resistivities = []
-
-        for model in self.saved_models + self.loaded_models:
-            x_position = model["x_position"]
-            y_position = model["y_position"]
-            depths = list(model["depths"])  # Convertir RVector a lista
-            resistivities = list(model["resistivity"])  # Convertir RVector a lista
-
-            # Asegurarse de que cada modelo empiece en profundidad 0
-            if depths[0] != 0:
-                depths = [0] + depths
-                resistivities = [resistivities[0]] + resistivities
-
-            # Agregar puntos para cada capa según su espesor y resistividad
-            for i in range(1, len(depths)):
-                depth_range = range(int(depths[i-1]), int(depths[i]))
-                resistivity_value = resistivities[i-1]
-                for depth in depth_range:
-                    all_x_positions.append(x_position)
-                    all_y_positions.append(y_position)
-                    all_depths.append(depth)
-                    all_resistivities.append(resistivity_value)
-
-        # Obtener la resolución de interpolación seleccionada por el usuario
-        resolution = self.resolution_spin.value()
-
-        # Crear la cuadrícula para la interpolación
-        grid_x = np.linspace(min(all_x_positions), max(all_x_positions), resolution)
-        grid_y = np.linspace(min(all_y_positions), max(all_y_positions), resolution)
-        grid_z = np.linspace(min(all_depths), max(all_depths), resolution)
-        grid_x, grid_y, grid_z = np.meshgrid(grid_x, grid_y, grid_z, indexing='ij')
-
-        # Interpolación de resistividad
-        try:
-            grid_r = griddata(
-                points=(all_x_positions, all_y_positions, all_depths),
-                values=all_resistivities,
-                xi=(grid_x, grid_y, grid_z),
-                method=self.interpolation_combo.currentText()
-            )
-        except scipy.spatial.qhull.QhullError:
-            self.eda_output.append("Error de interpolación: los puntos de entrada no son suficientemente diversos para formar un simplex inicial válido.")
-            return
-
-        # Normalizar los valores para evitar negativos
-        grid_r = np.where(grid_r < 0, 0, grid_r)  # Reemplazar valores negativos por 0
-
-        # Limpiar la figura y agregar el nuevo gráfico
-        self.figure_3d.clear()
-        ax = self.figure_3d.add_subplot(111, projection='3d')
-
-        # Generar el gráfico 3D
-        for i in range(len(grid_z)):
-            ax.plot_surface(grid_x[:, :, i], grid_y[:, :, i], grid_z[:, :, i], facecolors=cm.jet(grid_r[:, :, i] / np.nanmax(grid_r)), rstride=1, cstride=1, alpha=0.7, linewidth=0)
-
-        # Configuración de la gráfica
-        ax.set_xlabel("Distancia X (m)")
-        ax.set_ylabel("Distancia Y (m)")
-        ax.set_zlabel("Profundidad (m)")
-        ax.set_title(self.title_input.text() or "Mapa 3D de Resistividad")
-        ax.invert_zaxis()  # Invertir el eje Z para que la profundidad crezca hacia abajo
-
-        # Dibujar el gráfico actualizado en el canvas
-        self.canvas_3d.draw()
         
     def load_data(self):
         """Cargar datos desde un archivo Excel y mostrar la curva de resistividad."""

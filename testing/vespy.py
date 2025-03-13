@@ -47,7 +47,7 @@ Apoya el desarrollo continuo de vespy uniéndote a nuestra comunidad en Patreon.
 Lista de patrocinadores actuales
 Café:
     Jorge Mario Manjarres Contreras ☕
-    
+
 Gratis:
     Christhofer Omar Urquizo Quiroz
     José David Sanabria Gómez
@@ -81,6 +81,7 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.ndimage import gaussian_filter
 from scipy.fft import fft, fftfreq
 from scipy.interpolate import griddata
 from scipy.signal import savgol_filter
@@ -97,7 +98,9 @@ from matplotlib.figure import Figure
 from matplotlib.colors import Normalize
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-
+#from src.data_analysis import Analysis
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+from data_analysis import Analysis
 
 
 class WelcomeWindow(QMainWindow):
@@ -538,82 +541,12 @@ class SEVApp(QMainWindow):
             self.figure_2d.savefig(file_path)
             self.eda_output.append(f"Figura 2D guardada en: {file_path}")
 
-    def generate_3d_plot(self):
-        """Generar el gráfico 3D interpolado de resistividad en función de la profundidad, distancia X y distancia Y."""
 
-        if len(self.saved_models) + len(self.loaded_models) < 2:
-            self.eda_output.append("Se necesitan al menos dos modelos para generar el mapa 3D.")
-            return
+    def analyze_and_recommend(self, data):
+        """Realizar recomendaciones basadas en el análisis de los datos de resistividad."""
+        analysis = Analysis(data, self.analysis_figure, self.eda_output)
+        return analysis.analyze_and_recommend(data)
 
-        # Recoger datos de profundidad y resistividad
-        all_depths = []
-        all_x_positions = []
-        all_y_positions = []
-        all_resistivities = []
-
-        for model in self.saved_models + self.loaded_models:
-            x_position = model["x_position"]
-            y_position = model["y_position"]
-            depths = list(model["depths"])  # Convertir RVector a lista
-            resistivities = list(model["resistivity"])  # Convertir RVector a lista
-
-            # Asegurarse de que cada modelo empiece en profundidad 0
-            if depths[0] != 0:
-                depths = [0] + depths
-                resistivities = [resistivities[0]] + resistivities
-
-            # Agregar puntos para cada capa según su espesor y resistividad
-            for i in range(1, len(depths)):
-                depth_range = range(int(depths[i-1]), int(depths[i]))
-                resistivity_value = resistivities[i-1]
-                for depth in depth_range:
-                    all_x_positions.append(x_position)
-                    all_y_positions.append(y_position)
-                    all_depths.append(depth)
-                    all_resistivities.append(resistivity_value)
-
-        # Obtener la resolución de interpolación seleccionada por el usuario
-        resolution = self.resolution_spin.value()
-
-        # Crear la cuadrícula para la interpolación
-        grid_x = np.linspace(min(all_x_positions), max(all_x_positions), resolution)
-        grid_y = np.linspace(min(all_y_positions), max(all_y_positions), resolution)
-        grid_z = np.linspace(min(all_depths), max(all_depths), resolution)
-        grid_x, grid_y, grid_z = np.meshgrid(grid_x, grid_y, grid_z, indexing='ij')
-
-        # Interpolación de resistividad
-        try:
-            grid_r = griddata(
-                points=(all_x_positions, all_y_positions, all_depths),
-                values=all_resistivities,
-                xi=(grid_x, grid_y, grid_z),
-                method=self.interpolation_combo.currentText()
-            )
-        except scipy.spatial.qhull.QhullError:
-            self.eda_output.append("Error de interpolación: los puntos de entrada no son suficientemente diversos para formar un simplex inicial válido.")
-            return
-
-        # Normalizar los valores para evitar negativos
-        grid_r = np.where(grid_r < 0, 0, grid_r)  # Reemplazar valores negativos por 0
-
-        # Limpiar la figura y agregar el nuevo gráfico
-        self.figure_3d.clear()
-        ax = self.figure_3d.add_subplot(111, projection='3d')
-
-        # Generar el gráfico 3D
-        for i in range(len(grid_z)):
-            ax.plot_surface(grid_x[:, :, i], grid_y[:, :, i], grid_z[:, :, i], facecolors=cm.jet(grid_r[:, :, i] / np.nanmax(grid_r)), rstride=1, cstride=1, alpha=0.7, linewidth=0)
-
-        # Configuración de la gráfica
-        ax.set_xlabel("Distancia X (m)")
-        ax.set_ylabel("Distancia Y (m)")
-        ax.set_zlabel("Profundidad (m)")
-        ax.set_title(self.title_input.text() or "Mapa 3D de Resistividad")
-        ax.invert_zaxis()  # Invertir el eje Z para que la profundidad crezca hacia abajo
-
-        # Dibujar el gráfico actualizado en el canvas
-        self.canvas_3d.draw()
-        
     def load_data(self):
         """Cargar datos desde un archivo Excel y mostrar la curva de resistividad."""
         options = QFileDialog.Options()
@@ -642,7 +575,16 @@ class SEVApp(QMainWindow):
             # Mostrar la curva automáticamente después de cargar los datos
             self.plot_data()
 
+            # Realizar el empalme automáticamente
+            self.realizar_empalme()
+
+            # Realizar el análisis y mostrar recomendaciones
             self.analyze_data()
+            recommendations = self.analyze_and_recommend(self.data)
+            self.eda_output.append("\nRecomendaciones basadas en el análisis de datos:\n")
+            for key, value in recommendations.items():
+                self.eda_output.append(f"{key}: {value}")
+
     
     def display_data_table(self):
         """Mostrar los datos cargados en la tabla de datos."""
@@ -668,30 +610,12 @@ class SEVApp(QMainWindow):
     def realizar_empalme(self):
         """Generar el empalme y almacenarlo internamente."""
         if self.data is not None:
-            empalme_data = self.data.copy()
-            ab2 = empalme_data['AB/2'].values
-            rhoa = empalme_data['pa (Ω*m)'].values
+            # Generar el empalme para 'pa (Ω*m)'
+            empalme_data = self.data.groupby('AB/2')['pa (Ω*m)'].mean().reset_index()
             
-            # Crear un diccionario para almacenar los valores únicos de AB/2 y sus resistividades
-            unique_ab2 = {}
-            for i in range(len(ab2)):
-                if ab2[i] not in unique_ab2:
-                    unique_ab2[ab2[i]] = []
-                unique_ab2[ab2[i]].append(rhoa[i])
+            # Ajustar 'MN/2' para que coincida con el empalme de 'AB/2'
+            empalme_data['MN/2'] = self.data.groupby('AB/2')['MN/2'].first().values
             
-            # Calcular el empalme
-            empalme_ab2 = []
-            empalme_rhoa = []
-            for key in sorted(unique_ab2.keys()):
-                values = unique_ab2[key]
-                if len(values) > 1:
-                    empalme_rhoa.append(sum(values))
-                else:
-                    empalme_rhoa.append(values[0])
-                empalme_ab2.append(key)
-            
-            # Crear un nuevo DataFrame con los datos de empalme
-            empalme_data = pd.DataFrame({'AB/2': empalme_ab2, 'pa (Ω*m)': empalme_rhoa})
             self.empalme_data = empalme_data
             self.plot_data(empalme=True)
 
@@ -760,141 +684,102 @@ class SEVApp(QMainWindow):
 
     def analyze_data(self):
         """Realizar un análisis completo de los datos de resistividad."""
-        if self.data is not None:
-            resistivity = self.data['pa (Ω*m)'].values
-            
-            # Estadísticas descriptivas
-            mean = np.mean(resistivity)
-            std_dev = np.std(resistivity)
-            median = np.median(resistivity)
-            skewness = pd.Series(resistivity).skew()
-            kurtosis = pd.Series(resistivity).kurt()
+        analysis = Analysis(self.data, self.analysis_figure, self.eda_output)
+        analysis.analyze_data()
 
-            # Histograma y CDF (acumulativo)
-            self.analysis_figure.clear()
-            ax1 = self.analysis_figure.add_subplot(221)
-            sns.histplot(resistivity, bins=20, kde=False, color='blue', ax=ax1)
-            ax1.set_title("Histograma de Resistividades")
-            ax1.set_xlabel("Resistividad (Ω*m)")
-            ax1.set_ylabel("Frecuencia")
-
-            ax2 = self.analysis_figure.add_subplot(222)
-            sns.histplot(resistivity, bins=20, kde=True, cumulative=True, color='green', ax=ax2)
-            ax2.set_title("Histograma Acumulativo de Resistividades")
-            ax2.set_xlabel("Resistividad (Ω*m)")
-            ax2.set_ylabel("Frecuencia Acumulada")
-            
-            # Transformada de Fourier (FFT)
-            n = len(resistivity)
-            T = 1.0  # Supongamos una unidad de muestreo regular
-            yf = fft(resistivity)
-            xf = fftfreq(n, T)[:n//2]  # Solo las frecuencias positivas
-            
-            # Cálculo de la energía en cada frecuencia y frecuencia dominante
-            magnitudes = 2.0/n * np.abs(yf[:n//2])
-            dominant_freq = xf[np.argmax(magnitudes)]
-            
-            ax3 = self.analysis_figure.add_subplot(223)
-            ax3.plot(xf, magnitudes, color='purple')
-            ax3.set_title("Transformada de Fourier")
-            ax3.set_xlabel("Frecuencia")
-            ax3.set_ylabel("Magnitud")
-
-            # Mostrar la frecuencia dominante y estadísticas en la terminal de salida
-            self.eda_output.clear()
-            self.eda_output.append("Análisis Estadístico Completo:\n")
-            self.eda_output.append(f"Media: {mean:.2f} Ω*m")
-            self.eda_output.append(f"Desviación Estándar: {std_dev:.2f} Ω*m")
-            self.eda_output.append(f"Mediana: {median:.2f} Ω*m")
-            self.eda_output.append(f"Skewness (Asimetría): {skewness:.2f}")
-            self.eda_output.append(f"Kurtosis: {kurtosis:.2f}")
-            self.eda_output.append("\nTransformada de Fourier:\n")
-            self.eda_output.append(f"Frecuencia Dominante: {dominant_freq:.2f} Hz")
-            self.eda_output.append(f"Magnitud de Frecuencia Dominante: {magnitudes.max():.2f}")
-            self.analysis_canvas.draw()
 
     def invert_model(self):
         """Realizar la inversión de resistividad y mostrar resultados."""
         if self.data is not None:
-            # Usar los datos de empalme si están disponibles
-            data_to_use = self.empalme_data if hasattr(self, 'empalme_data') and self.empalme_data is not None else self.data
+            try:
+                # Usar los datos de empalme si están disponibles
+                data_to_use = self.empalme_data if hasattr(self, 'empalme_data') and self.empalme_data is not None else self.data
 
-            # Usar los datos filtrados si están disponibles
-            if hasattr(self, 'smoothed_data') and self.smoothed_data is not None:
-                rhoa = self.smoothed_data
-            else:
-                rhoa = data_to_use['pa (Ω*m)'].values
-
-            # Extraer vectores para la inversión
-            ab2 = data_to_use['AB/2'].values
-            mn2 = data_to_use['MN/2'].values if 'MN/2' in data_to_use.columns else None
-
-            # Verificar que las longitudes de los vectores sean iguales
-            if len(rhoa) != len(ab2) or (mn2 is not None and len(rhoa) != len(mn2)):
-                raise ValueError("Las longitudes de los vectores rhoa, ab2 y mn2 (si está presente) deben ser iguales.")
-
-            # Configurar los parámetros y ejecutar la inversión
-            ves = VESManager()
-            n_layers = self.layer_spin.value()
-            lambda_val = self.lambda_spin.value()
-            lambda_factor = self.lambda_factor_spin.value()
-            error = np.ones_like(rhoa) * 0.03
-            
-            # Calcular profundidad máxima automáticamente como max(AB/2) / 3
-            max_depth = np.max(ab2) / 3
-
-            # Obtener el método seleccionado
-            method = self.model_selector.currentText()
-
-            if method == 'Levenberg-Marquardt':
-                print("No disponible")
-                return
-            else:
-                # Ejecutar la inversión con o sin mn2 usando la navaja de Occam
-                if mn2 is not None:
-                    model = ves.invert(rhoa, error, ab2=ab2, mn2=mn2, nLayers=n_layers, lam=lambda_val, lambdaFactor=lambda_factor)
+                # Usar los datos filtrados si están disponibles
+                if hasattr(self, 'smoothed_data') and self.smoothed_data is not None:
+                    rhoa = self.smoothed_data
                 else:
-                    model = ves.invert(rhoa, error, ab2=ab2, nLayers=n_layers, lam=lambda_val, lambdaFactor=lambda_factor)
+                    rhoa = data_to_use['pa (Ω*m)'].values
 
-            # Graficar datos observados y curva ajustada en el modelo de inversión
-            self.inversion_figure.clear()
-            ax1 = self.inversion_figure.add_subplot(121)
-            ves.showData(rhoa, ab2=ab2, ax=ax1, label="Datos Observados", color="C0", marker="o")
-            ves.showData(ves.inv.response, ab2=ab2, ax=ax1, label="Curva Invertida", color="C1")
-            ax1.set_xscale("log")
-            ax1.set_yscale("log")
-            ax1.set_title("Ajuste del Modelo")
-            ax1.set_ylabel("AB/2 (m)")
-            ax1.set_xlabel("Resistividad aparente (Ω*m)")
-            ax1.legend()
+                # Extraer vectores para la inversión
+                ab2 = data_to_use['AB/2'].values
+                mn2 = data_to_use['MN/2'].values if 'MN/2' in data_to_use.columns else None
 
-            # Extraer profundidades y resistividades calculadas por el modelo
-            depths = np.cumsum(model[:n_layers - 1])  # Calcular profundidades acumuladas
-            resistividades = model[n_layers - 1:]  # Resistividades de las capas
+                # Verificar que las longitudes de los vectores sean iguales
+                if len(rhoa) != len(ab2) or (mn2 is not None and len(rhoa) != len(mn2)):
+                    raise ValueError("Las longitudes de los vectores rhoa, ab2 y mn2 (si está presente) deben ser iguales.")
 
-            # Convertir profundidades a espesores
-            thickness = np.diff(np.concatenate(([0], depths)))  # Espesores de las capas
+                # Configurar los parámetros y ejecutar la inversión
+                ves = VESManager()
+                n_layers = self.layer_spin.value()
+                lambda_val = self.lambda_spin.value()
+                lambda_factor = self.lambda_factor_spin.value()
+                error = np.ones_like(rhoa) * 0.03
+                
+                # Calcular profundidad máxima automáticamente como max(AB/2) / 3
+                max_depth = np.max(ab2) / 3
 
-            # Graficar el modelo de capas
-            ax2 = self.inversion_figure.add_subplot(122)
-            ves.showModel(
-                model=np.concatenate((thickness, resistividades)),  # Modelo combinado
-                ax=ax2,
-                plot="semilogy",
-                zmax=max_depth  # Se limita la profundidad visualizada
-            )
-            ax2.set_title("Modelo de Resistividad 1D")
-            self.inversion_canvas.draw()
+                # Obtener el método seleccionado
+                method = self.model_selector.currentText()
 
-            # Almacenar y actualizar la tabla de inversión
-            self.depths = depths
-            self.resistivity = resistividades
-            self.update_model_table(thickness, depths, resistividades)
-            self.table_tabs.setTabText(1, f"{self.current_file}-inversión")
+                if method == 'Levenberg-Marquardt':
+                    self.eda_output.append("Método Levenberg-Marquardt no disponible.")
+                    return
+                else:
+                    # Ejecutar la inversión con o sin mn2 usando la navaja de Occam
+                    if mn2 is not None:
+                        model = ves.invert(rhoa, error, ab2=ab2, mn2=mn2, nLayers=n_layers, lam=lambda_val, lambdaFactor=lambda_factor)
+                    else:
+                        model = ves.invert(rhoa, error, ab2=ab2, nLayers=n_layers, lam=lambda_val, lambdaFactor=lambda_factor)
 
-            # Store the results for further processing
-            self.thickness = thickness
-            self.resistivities = resistividades
+                # Calcular el error cuadrático medio (RMSE) en términos de porcentaje
+                rmse = np.sqrt(np.mean(((ves.inv.response - rhoa) / rhoa) ** 2)) * 100
+
+                # Graficar datos observados y curva ajustada en el modelo de inversión
+                self.inversion_figure.clear()
+                ax1 = self.inversion_figure.add_subplot(121)
+                ves.showData(rhoa, ab2=ab2, ax=ax1, label="Datos Observados", color="C0", marker="o")
+                ves.showData(ves.inv.response, ab2=ab2, ax=ax1, label="Curva Invertida", color="C1")
+                ax1.set_xscale("log")
+                ax1.set_yscale("log")
+                ax1.set_title("Ajuste del Modelo")
+                ax1.set_ylabel("AB/2 (m)")
+                ax1.set_xlabel("Resistividad aparente (Ω*m)")
+                ax1.legend()
+
+                # Extraer profundidades y resistividades calculadas por el modelo
+                depths = np.cumsum(model[:n_layers - 1])  # Calcular profundidades acumuladas
+                resistividades = model[n_layers - 1:]  # Resistividades de las capas
+
+                # Convertir profundidades a espesores
+                thickness = np.diff(np.concatenate(([0], depths)))  # Espesores de las capas
+
+                # Graficar el modelo de capas
+                ax2 = self.inversion_figure.add_subplot(122)
+                ves.showModel(
+                    model=np.concatenate((thickness, resistividades)),  # Modelo combinado
+                    ax=ax2,
+                    plot="semilogy",
+                    zmax=max_depth  # Se limita la profundidad visualizada
+                )
+                ax2.set_title("Modelo de Resistividad 1D")
+                self.inversion_canvas.draw()
+
+                # Almacenar y actualizar la tabla de inversión
+                self.depths = depths
+                self.resistivity = resistividades
+                self.update_model_table(thickness, depths, resistividades)
+                self.table_tabs.setTabText(1, f"{self.current_file}-inversión")
+
+                # Store the results for further processing
+                self.thickness = thickness
+                self.resistivities = resistividades
+
+                # Mostrar el RMSE en la terminal de salida
+                self.eda_output.append(f"Error Cuadrático Medio (RMSE) de la Inversión: {rmse:.2f}%")
+
+            except Exception as e:
+                self.eda_output.append(f"Error durante la inversión: {str(e)}")
 
     def find_water(self):
         # Lithological classification based on aquifer characteristics
