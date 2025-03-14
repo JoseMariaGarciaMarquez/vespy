@@ -54,6 +54,7 @@ from invert_ves import InvertVes
 from preprocessing import Preprocessing
 from classified_ves import ClassifiedVes
 from gui_ves import GUI
+from help_window import HelpWindow
 
 class SEVApp(QMainWindow, GUI):
     def __init__(self):
@@ -91,6 +92,20 @@ class SEVApp(QMainWindow, GUI):
         self.grid_x = None
         self.grid_y = None
         self.grid_z = None
+
+        # Añadir el menú de ayuda
+        self.init_help_menu()
+
+    def init_help_menu(self):
+        help_action = QAction("Ayuda", self)
+        help_action.triggered.connect(self.show_help)
+        menubar = self.menuBar()
+        help_menu = menubar.addMenu("Ayuda")
+        help_menu.addAction(help_action)
+
+    def show_help(self):
+        self.help_window = HelpWindow(self)
+        self.help_window.show()
 # FUNCIONES DE LA APP VESPY------------------------------------------------------------------------------
 
     def load_inverted_models(self):
