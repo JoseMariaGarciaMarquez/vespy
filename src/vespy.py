@@ -42,7 +42,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, 
                              QTableWidget, QTableWidgetItem, QComboBox, QDoubleSpinBox, 
                              QSpinBox, QLabel, QGroupBox, QToolBar, QAction, QPushButton, 
-                             QTabWidget, QTextEdit, QLineEdit)
+                             QTabWidget, QTextEdit, QLineEdit, QInputDialog)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -95,6 +95,55 @@ class SEVApp(QMainWindow, GUI):
 
     def load_inverted_models(self):
         self.data_loader.load_inverted_models()
+
+    def save_model(self, x_position=None, y_position=None):
+        """Guardar el modelo de inversión actual."""
+
+        # Solicitar la posición X del usuario
+        x_position, ok = QInputDialog.getDouble(self, "Posición X", "Ingrese la posición X para el modelo cargado:", 0, -10000, 10000, 2)
+        if not ok:
+            self.eda_output.append("Carga del modelo cancelada.")
+            return
+
+        # Solicitar la posición Y del usuario
+        y_position, ok = QInputDialog.getDouble(self, "Posición Y", "Ingrese la posición Y para el modelo cargado:", 0, -10000, 10000, 2)
+        if not ok:
+            self.eda_output.append("Carga del modelo cancelada.")
+            return
+
+        # Solicitar el número de SEV del usuario
+        sev_number, ok = QInputDialog.getInt(self, "Número de SEV", "Ingrese el número de SEV para el modelo cargado:", 0, 0, 10000, 1)
+        if not ok:
+            if self.saved_models:
+                sev_number = self.saved_models[-1].get("sev_number", 0) + 1
+            else:
+                sev_number = 1
+
+        # Solicitar la altura relativa del usuario
+        relative_height, ok = QInputDialog.getDouble(self, "Altura Relativa", "Ingrese la altura relativa para el modelo cargado:", 0, -10000, 10000, 2)
+        if not ok:
+            relative_height = 0
+
+        if self.depths is None or self.resistivity is None:
+            self.eda_output.append("Error: No hay modelo de inversión para guardar.")
+            return
+
+        if self.depths.size == 0 or self.resistivity.size == 0:
+            self.eda_output.append("Error: Los datos de profundidad o resistividad están vacíos.")
+            return
+
+        # Crear y guardar el modelo en `self.saved_models` con su profundidad y resistividad originales
+        model_data = {
+            "depths": self.depths,
+            "resistivity": self.resistivity,
+            "x_position": x_position,
+            "y_position": y_position,
+            "sev_number": sev_number,  # Añadir número de SEV
+            "relative_height": relative_height  # Añadir altura relativa
+        }
+
+        self.saved_models.append(model_data)
+        self.eda_output.append(f"Modelo guardado en posición X = {x_position} m, Y = {y_position} m, SEV = {sev_number}, Altura Relativa = {relative_height} m.")
 
     def generate_2d_plot(self):
         """Generar el gráfico 2D interpolado de resistividad en función de la profundidad y distancia."""

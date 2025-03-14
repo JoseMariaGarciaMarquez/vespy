@@ -4,7 +4,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, 
                              QTableWidget, QTableWidgetItem, QComboBox, QDoubleSpinBox, 
                              QSpinBox, QLabel, QGroupBox, QToolBar, QAction, QPushButton, 
-                             QTabWidget, QTextEdit, QLineEdit)
+                             QTabWidget, QTextEdit, QLineEdit, QInputDialog)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -182,6 +182,16 @@ class GUI:
         plot2d_layout.addWidget(self.resolution_spin)
         plot2d_layout.addWidget(QLabel("Título de la Gráfica"))
         plot2d_layout.addWidget(self.title_input)
+
+        # Botón para generar gráfico 2D
+        self.generate_2d_button = QPushButton("Generar Gráfico 2D")
+        self.generate_2d_button.clicked.connect(self.generate_2d_plot)
+        plot2d_layout.addWidget(self.generate_2d_button)
+
+        # Botón para guardar figura 2D
+        self.save_2d_button = QPushButton("Guardar Figura 2D")
+        self.save_2d_button.clicked.connect(self.save_2d_figure)
+        plot2d_layout.addWidget(self.save_2d_button)
 
         plot2d_controls.setLayout(plot2d_layout)
         control_panel.addWidget(plot2d_controls)

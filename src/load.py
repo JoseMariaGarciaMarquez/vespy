@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from PyQt5.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton
+from PyQt5.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton, QInputDialog
 import odf 
 
 class DataLoader:
