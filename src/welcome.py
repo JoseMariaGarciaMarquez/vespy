@@ -51,7 +51,7 @@ class WelcomeWindow(QMainWindow):
         webbrowser.open("https://www.patreon.com/chemitas")
 
     def closeEvent(self, event):
-        from vespy import SEVApp  # Importar SEVApp dentro del método para evitar importación circular
+        from vespy import SEVApp  # Importar SEVApp desde vespy en src
         self.main_window = SEVApp()
         self.main_window.show()
         event.accept()

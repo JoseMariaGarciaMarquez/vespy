@@ -96,6 +96,11 @@ class SEVApp(QMainWindow, GUI):
     def load_inverted_models(self):
         self.data_loader.load_inverted_models()
 
+    def realizar_empalme(self):
+        """Generar el empalme y almacenarlo internamente."""
+        self.preprocessing.realizar_empalme()
+
+
     def save_model(self, x_position=None, y_position=None):
         """Guardar el modelo de inversión actual."""
 

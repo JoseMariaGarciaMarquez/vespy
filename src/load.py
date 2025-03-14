@@ -66,14 +66,14 @@ class DataLoader:
             self.parent.plot_data()
 
             # Realizar el empalme automáticamente
-            self.parent.realizar_empalme()
+            #self.parent.realizar_empalme()
 
             # Realizar el análisis y mostrar recomendaciones
-            self.parent.analyze_data()
-            recommendations = self.parent.analyze_and_recommend(self.parent.data)
-            self.parent.eda_output.append("\nRecomendaciones basadas en el análisis de datos:\n")
-            for key, value in recommendations.items():
-                self.parent.eda_output.append(f"{key}: {value}")
+            #self.parent.analyze_data()
+            #recommendations = self.parent.analyze_and_recommend(self.parent.data)
+            #self.parent.eda_output.append("\nRecomendaciones basadas en el análisis de datos:\n")
+            #for key, value in recommendations.items():
+            #    self.parent.eda_output.append(f"{key}: {value}")
 
     def load_inverted_models(self):
         """Cargar modelos invertidos desde archivos Excel, CSV o LibreOffice (ODS)."""

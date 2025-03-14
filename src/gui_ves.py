@@ -69,7 +69,7 @@ class GUI:
         preprocessing_layout = QVBoxLayout(preprocessing_tab)
         preprocessing_layout.addWidget(QLabel("Preprocesamiento"))
         
-        self.empalme_button = QPushButton("Realizar Empalme")
+        self.empalme_button = QPushButton("Promediar MN")
         self.empalme_button.clicked.connect(self.realizar_empalme)
         preprocessing_layout.addWidget(self.empalme_button)
         

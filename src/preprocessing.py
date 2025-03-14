@@ -18,6 +18,16 @@ class Preprocessing:
             
             self.parent.empalme_data = empalme_data
             self.parent.plot_data(empalme=True)
+            self.parent.eda_output.append("Empalme realizado correctamente.")
+            
+            # Llamar al análisis de datos después de realizar el empalme
+            self.parent.analyze_data()
+            
+            # Realizar recomendaciones basadas en el empalme
+            recommendations = self.parent.analyze_and_recommend(self.parent.empalme_data)
+            self.parent.eda_output.append("\nRecomendaciones basadas en el análisis de datos:\n")
+            for key, value in recommendations.items():
+                self.parent.eda_output.append(f"{key}: {value}")
 
     def apply_filter(self):
         """Aplicar el filtro de suavizado seleccionado a los datos."""
