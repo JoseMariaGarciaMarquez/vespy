@@ -55,6 +55,7 @@ from preprocessing import Preprocessing
 from classified_ves import ClassifiedVes
 from gui_ves import GUI
 from help_window import HelpWindow
+from loaded_files_window import LoadedFilesWindow
 
 class SEVApp(QMainWindow, GUI):
     def __init__(self):
@@ -86,6 +87,7 @@ class SEVApp(QMainWindow, GUI):
         self.depths = None
         self.resistivity = None
         self.model_path = "modelos"
+        self.loaded_files = []  # Lista para almacenar archivos cargados
         
         # Parámetros para el gráfico 2D
         self.distances = None
@@ -93,19 +95,31 @@ class SEVApp(QMainWindow, GUI):
         self.grid_y = None
         self.grid_z = None
 
-        # Añadir el menú de ayuda
-        self.init_help_menu()
+        # Añadir el menú de ayuda y archivos cargados
+        self.init_menus()
 
-    def init_help_menu(self):
+    def init_menus(self):
+        # Menú de ayuda
         help_action = QAction("Ayuda", self)
         help_action.triggered.connect(self.show_help)
         menubar = self.menuBar()
         help_menu = menubar.addMenu("Ayuda")
         help_menu.addAction(help_action)
+        
+        # Menú de archivos cargados
+        loaded_files_action = QAction("Archivos Cargados", self)
+        loaded_files_action.triggered.connect(self.show_loaded_files)
+        menubar.addAction(loaded_files_action)
 
     def show_help(self):
         self.help_window = HelpWindow(self)
         self.help_window.show()
+
+    def show_loaded_files(self):
+        self.loaded_files_window = LoadedFilesWindow(self)
+        self.loaded_files_window.show()
+
+        
 # FUNCIONES DE LA APP VESPY------------------------------------------------------------------------------
 
     def load_inverted_models(self):

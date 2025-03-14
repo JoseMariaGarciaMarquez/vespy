@@ -65,15 +65,9 @@ class DataLoader:
             # Mostrar la curva automáticamente después de cargar los datos
             self.parent.plot_data()
 
-            # Realizar el empalme automáticamente
-            #self.parent.realizar_empalme()
+            # Añadir el nombre del archivo a la lista de archivos cargados
+            self.parent.loaded_files.append(self.parent.current_file)
 
-            # Realizar el análisis y mostrar recomendaciones
-            #self.parent.analyze_data()
-            #recommendations = self.parent.analyze_and_recommend(self.parent.data)
-            #self.parent.eda_output.append("\nRecomendaciones basadas en el análisis de datos:\n")
-            #for key, value in recommendations.items():
-            #    self.parent.eda_output.append(f"{key}: {value}")
 
     def load_inverted_models(self):
         """Cargar modelos invertidos desde archivos Excel, CSV o LibreOffice (ODS)."""
@@ -113,6 +107,9 @@ class DataLoader:
             self.parent.resistivity = resistivity
             self.parent.save_model()
 
+            # Extraer el nombre del archivo y añadirlo a la lista de archivos cargados
+            file_name = os.path.splitext(os.path.basename(file))[0]
+            self.parent.loaded_files.append(file_name)
             self.parent.eda_output.append(f"Modelo cargado desde: {file}")
 
     def assign_columns(self, missing_columns):
