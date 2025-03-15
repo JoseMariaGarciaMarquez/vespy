@@ -11,7 +11,7 @@ class LoadedDataFilesWindow(QDialog):
         layout = QVBoxLayout()
         
         # Título
-        title = QLabel("<h1>Archivos de Datos Cargados</h1>")
+        title = QLabel("<h1>SEVs</h1>")
         layout.addWidget(title)
         
         # Lista de archivos cargados

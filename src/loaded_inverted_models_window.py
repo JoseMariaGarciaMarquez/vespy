@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QListWidget, QMessageBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QListWidget, QMessageBox, QInputDialog
 
 class LoadedInvertedModelsWindow(QDialog):
     def __init__(self, parent=None):
@@ -19,13 +19,13 @@ class LoadedInvertedModelsWindow(QDialog):
         self.update_file_list()
         layout.addWidget(self.file_list)
         
-        # Botón de cargar archivo
-        load_button = QPushButton("Cargar Archivo Seleccionado")
-        load_button.clicked.connect(self.load_selected_file)
-        layout.addWidget(load_button)
+        # Botón de ver/editar modelo
+        edit_button = QPushButton("Ver/Editar Modelo Seleccionado")
+        edit_button.clicked.connect(self.edit_selected_model)
+        layout.addWidget(edit_button)
         
         # Botón de eliminar archivo
-        delete_button = QPushButton("Eliminar Archivo Seleccionado")
+        delete_button = QPushButton("Eliminar Modelo Seleccionado")
         delete_button.clicked.connect(self.delete_selected_file)
         layout.addWidget(delete_button)
         
@@ -37,32 +37,60 @@ class LoadedInvertedModelsWindow(QDialog):
         self.setLayout(layout)
     
     def update_file_list(self):
-        """Actualizar la lista de archivos cargados."""
+        """Actualizar la lista de modelos invertidos cargados."""
         self.file_list.clear()
         for file in self.parent.loaded_inverted_models:
             self.file_list.addItem(file)
     
-    def load_selected_file(self):
-        """Cargar el archivo seleccionado de la lista."""
+    def edit_selected_model(self):
+        """Ver/Editar el modelo seleccionado de la lista."""
         selected_item = self.file_list.currentItem()
         if selected_item:
             file_name = selected_item.text()
-            self.parent.load_inverted_model_from_memory(file_name)
-            self.parent.eda_output.append(f"Modelo invertido '{file_name}' cargado.")
+            model = self.parent.loaded_inverted_models[file_name]
+            
+            # Asegurarse de que las claves existen en el diccionario
+            model.setdefault('x_position', 0.0)
+            model.setdefault('y_position', 0.0)
+            model.setdefault('sev_number', 0)
+            model.setdefault('relative_height', 0.0)
+            
+            # Editar posición X
+            x_position, ok = QInputDialog.getDouble(self, "Editar Posición X", "Ingrese la nueva posición X:", model['x_position'])
+            if ok:
+                model['x_position'] = x_position
+            
+            # Editar posición Y
+            y_position, ok = QInputDialog.getDouble(self, "Editar Posición Y", "Ingrese la nueva posición Y:", model['y_position'])
+            if ok:
+                model['y_position'] = y_position
+            
+            # Editar número de SEV
+            sev_number, ok = QInputDialog.getInt(self, "Editar Número de SEV", "Ingrese el nuevo número de SEV:", model['sev_number'])
+            if ok:
+                model['sev_number'] = sev_number
+            
+            # Editar altura relativa
+            relative_height, ok = QInputDialog.getDouble(self, "Editar Altura Relativa", "Ingrese la nueva altura relativa:", model['relative_height'])
+            if ok:
+                model['relative_height'] = relative_height
+            
+            self.parent.loaded_inverted_models[file_name] = model
+            self.parent.eda_output.append(f"Modelo invertido '{file_name}' actualizado.")
         else:
-            QMessageBox.warning(self, 'Cargar Archivo', "Por favor, selecciona un archivo para cargar.")
+            QMessageBox.warning(self, 'Editar Modelo', "Por favor, selecciona un modelo para editar.")
     
     def delete_selected_file(self):
-        """Eliminar el archivo seleccionado de la lista."""
+        """Eliminar el modelo seleccionado de la lista."""
         selected_item = self.file_list.currentItem()
         if selected_item:
             file_name = selected_item.text()
-            reply = QMessageBox.question(self, 'Eliminar Archivo',
-                                         f"¿Estás seguro de que deseas eliminar el archivo '{file_name}'?",
+            reply = QMessageBox.question(self, 'Eliminar Modelo',
+                                         f"¿Estás seguro de que deseas eliminar el modelo '{file_name}'?",
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 del self.parent.loaded_inverted_models[file_name]
                 self.update_file_list()
                 self.parent.eda_output.append(f"Modelo invertido '{file_name}' eliminado.")
         else:
-            QMessageBox.warning(self, 'Eliminar Archivo', "Por favor, selecciona un archivo para eliminar.")
+            QMessageBox.warning(self, 'Eliminar Modelo', "Por favor, selecciona un modelo para eliminar.")
