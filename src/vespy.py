@@ -55,7 +55,8 @@ from preprocessing import Preprocessing
 from classified_ves import ClassifiedVes
 from gui_ves import GUI
 from help_window import HelpWindow
-from loaded_files_window import LoadedFilesWindow
+from loaded_data_files_window import LoadedDataFilesWindow
+from loaded_inverted_models_window import LoadedInvertedModelsWindow
 
 class SEVApp(QMainWindow, GUI):
     def __init__(self):
@@ -87,7 +88,8 @@ class SEVApp(QMainWindow, GUI):
         self.depths = None
         self.resistivity = None
         self.model_path = "modelos"
-        self.loaded_files = []  # Lista para almacenar archivos cargados
+        self.loaded_data_files = {}  # Diccionario para almacenar los datos cargados en memoria
+        self.loaded_inverted_models = {}  # Diccionario para almacenar los modelos invertidos cargados en memoria
         
         # Parámetros para el gráfico 2D
         self.distances = None
@@ -106,19 +108,98 @@ class SEVApp(QMainWindow, GUI):
         help_menu = menubar.addMenu("Ayuda")
         help_menu.addAction(help_action)
         
-        # Menú de archivos cargados
-        loaded_files_action = QAction("Archivos Cargados", self)
-        loaded_files_action.triggered.connect(self.show_loaded_files)
-        menubar.addAction(loaded_files_action)
+        # Menú de archivos de datos cargados
+        loaded_data_files_action = QAction("Archivos de Datos Cargados", self)
+        loaded_data_files_action.triggered.connect(self.show_loaded_data_files)
+        menubar.addAction(loaded_data_files_action)
+        
+        # Menú de modelos invertidos cargados
+        loaded_inverted_models_action = QAction("Modelos Invertidos Cargados", self)
+        loaded_inverted_models_action.triggered.connect(self.show_loaded_inverted_models)
+        menubar.addAction(loaded_inverted_models_action)
 
     def show_help(self):
         self.help_window = HelpWindow(self)
         self.help_window.show()
 
-    def show_loaded_files(self):
-        self.loaded_files_window = LoadedFilesWindow(self)
-        self.loaded_files_window.show()
+    def show_loaded_data_files(self):
+        self.loaded_data_files_window = LoadedDataFilesWindow(self)
+        self.loaded_data_files_window.show()
 
+    def show_loaded_inverted_models(self):
+        self.loaded_inverted_models_window = LoadedInvertedModelsWindow(self)
+        self.loaded_inverted_models_window.show()
+
+    def load_data_from_file(self, file_path):
+        """Cargar datos desde un archivo específico y mostrar la curva de resistividad."""
+        if file_path.endswith(('.xlsx', '.xls')):
+            self.data = self.data_loader.load_excel(file_path)
+        elif file_path.endswith('.csv'):
+            self.data = self.data_loader.load_csv(file_path)
+        elif file_path.endswith('.ods'):
+            self.data = self.data_loader.load_libreoffice(file_path)
+            if self.data is None:
+                return
+        else:
+            self.eda_output.append("Error: Formato de archivo no soportado.")
+            return
+
+        self.data.columns = self.data.columns.str.strip()  # Quita espacios en los nombres de columnas
+        self.data = self.data.dropna()  # Eliminar filas con valores NaN
+        
+        # Convertir todas las columnas a formato numérico si es posible
+        self.data = self.data.apply(pd.to_numeric, errors='coerce')
+
+        # Verificar que los encabezados sean correctos
+        required_columns = ['AB/2', 'MN/2', 'K', 'PN', 'PI', 'I (Ma)', '∆V (Mv)', 'pa (Ω*m)']
+        missing_columns = [col for col in required_columns if col not in self.data.columns]
+        if missing_columns:
+            self.data_loader.assign_columns(missing_columns)
+        
+        # Extraer el nombre del archivo para las pestañas
+        self.current_file = os.path.splitext(os.path.basename(file_path))[0]
+        self.table_tabs.setTabText(0, f"{self.current_file}-datos")
+        
+        # Llenar la tabla de datos en la interfaz
+        self.display_data_table()
+        
+        # Mostrar la curva automáticamente después de cargar los datos
+        self.plot_data()
+
+        # Guardar los datos en memoria
+        self.loaded_data_files[self.current_file] = self.data
+
+    def load_data_from_memory(self, file_name):
+        """Cargar datos desde la memoria y mostrar la curva de resistividad."""
+        if file_name in self.loaded_data_files:
+            self.data = self.loaded_data_files[file_name]
+            self.current_file = file_name
+            self.table_tabs.setTabText(0, f"{self.current_file}-datos")
+            
+            # Llenar la tabla de datos en la interfaz
+            self.display_data_table()
+            
+            # Mostrar la curva automáticamente después de cargar los datos
+            self.plot_data()
+        else:
+            self.eda_output.append(f"Error: El archivo '{file_name}' no se encuentra en memoria.")
+
+    def load_inverted_model_from_memory(self, file_name):
+        """Cargar un modelo invertido desde la memoria y mostrar los datos."""
+        if file_name in self.loaded_inverted_models:
+            model = self.loaded_inverted_models[file_name]
+            self.depths = model['depths']
+            self.resistivity = model['resistivity']
+            self.current_file = file_name
+            self.table_tabs.setTabText(1, f"{self.current_file}-inversión")
+            
+            # Llenar la tabla de inversión en la interfaz
+            self.update_model_table(self.depths, self.resistivity)
+            
+            # Mostrar la curva automáticamente después de cargar los datos
+            self.plot_data()
+        else:
+            self.eda_output.append(f"Error: El modelo invertido '{file_name}' no se encuentra en memoria.")
         
 # FUNCIONES DE LA APP VESPY------------------------------------------------------------------------------
 
@@ -291,6 +372,7 @@ class SEVApp(QMainWindow, GUI):
     def save_inversion_table(self):
         """Guardar la tabla del resultado de la inversión en un archivo."""
         self.invert_ves.save_inversion_table(self)
+
 
 def main():
     app = QApplication(sys.argv)
