@@ -54,7 +54,7 @@ from invert_ves import InvertVes
 from preprocessing import Preprocessing
 from classified_ves import ClassifiedVes
 from gui_ves import GUI
-from help_window import HelpWindow
+from help_window import HelpWindow, HelpInversionWindow, HelpPreprocessingWindow, HelpAnalysisWindow, HelpPlottingWindow, HelpUsageWindow
 from loaded_data_files_window import LoadedDataFilesWindow
 from loaded_inverted_models_window import LoadedInvertedModelsWindow
 
@@ -101,12 +101,35 @@ class SEVApp(QMainWindow, GUI):
         self.init_menus()
 
     def init_menus(self):
-        # Menú de ayuda
-        help_action = QAction("Ayuda", self)
-        help_action.triggered.connect(self.show_help)
         menubar = self.menuBar()
+        
+        # Menú de ayuda
         help_menu = menubar.addMenu("Ayuda")
-        help_menu.addAction(help_action)
+        
+        # Submenú de Inversión
+        inversion_help_action = QAction("Inversión", self)
+        inversion_help_action.triggered.connect(self.show_inversion_help)
+        help_menu.addAction(inversion_help_action)
+        
+        # Submenú de Preprocesamiento
+        preprocessing_help_action = QAction("Preprocesamiento", self)
+        preprocessing_help_action.triggered.connect(self.show_preprocessing_help)
+        help_menu.addAction(preprocessing_help_action)
+        
+        # Submenú de Análisis de Datos
+        analysis_help_action = QAction("Análisis de Datos", self)
+        analysis_help_action.triggered.connect(self.show_analysis_help)
+        help_menu.addAction(analysis_help_action)
+        
+        # Submenú de Generación de Gráficos
+        plotting_help_action = QAction("Generación de Gráficos", self)
+        plotting_help_action.triggered.connect(self.show_plotting_help)
+        help_menu.addAction(plotting_help_action)
+        
+        # Submenú de Cómo Usar el Software
+        usage_help_action = QAction("Cómo Usar el Software", self)
+        usage_help_action.triggered.connect(self.show_usage_help)
+        help_menu.addAction(usage_help_action)
         
         # Menú de archivos de datos cargados
         loaded_data_files_action = QAction("Archivos de Datos Cargados", self)
@@ -118,9 +141,25 @@ class SEVApp(QMainWindow, GUI):
         loaded_inverted_models_action.triggered.connect(self.show_loaded_inverted_models)
         menubar.addAction(loaded_inverted_models_action)
 
-    def show_help(self):
-        self.help_window = HelpWindow(self)
-        self.help_window.show()
+    def show_inversion_help(self):
+        self.inversion_help_window = HelpInversionWindow(self)
+        self.inversion_help_window.show()
+
+    def show_preprocessing_help(self):
+        self.preprocessing_help_window = HelpPreprocessingWindow(self)
+        self.preprocessing_help_window.show()
+
+    def show_analysis_help(self):
+        self.analysis_help_window = HelpAnalysisWindow(self)
+        self.analysis_help_window.show()
+
+    def show_plotting_help(self):
+        self.plotting_help_window = HelpPlottingWindow(self)
+        self.plotting_help_window.show()
+
+    def show_usage_help(self):
+        self.usage_help_window = HelpUsageWindow(self)
+        self.usage_help_window.show()
 
     def show_loaded_data_files(self):
         self.loaded_data_files_window = LoadedDataFilesWindow(self)
