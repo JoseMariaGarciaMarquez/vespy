@@ -1,5 +1,5 @@
 # VESPY - Visualización y Procesamiento de Datos de Sondeo Eléctrico Vertical (VES) en Python
-![logo23](https://github.com/user-attachments/assets/db68f8e5-e83a-4f27-b7db-ec1c70c32b84)
+![logo](https://github.com/user-attachments/assets/7eba99dd-6a3a-4225-b45b-0cb5354e2507)
 
 ## Descripción
 VESPY es una aplicación en Python diseñada para la visualización y el procesamiento de datos de Sondeo Eléctrico Vertical (VES). Ofrece herramientas para la carga, preprocesamiento, análisis e inversión de datos de resistividad, permitiendo una mejor interpretación geofísica.
