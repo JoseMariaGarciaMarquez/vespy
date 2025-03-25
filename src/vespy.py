@@ -57,6 +57,7 @@ from gui_ves import GUI
 from help_window import HelpWindow, HelpInversionWindow, HelpPreprocessingWindow, HelpAnalysisWindow, HelpPlottingWindow, HelpUsageWindow
 from loaded_data_files_window import LoadedDataFilesWindow
 from loaded_inverted_models_window import LoadedInvertedModelsWindow
+from support_window import SupportWindow
 
 class SEVApp(QMainWindow, GUI):
     def __init__(self):
@@ -140,6 +141,15 @@ class SEVApp(QMainWindow, GUI):
         loaded_inverted_models_action = QAction("Modelos Invertidos Cargados", self)
         loaded_inverted_models_action.triggered.connect(self.show_loaded_inverted_models)
         menubar.addAction(loaded_inverted_models_action)
+
+        # Menú de soporte
+        support_action = QAction("¡Quiero aportar!", self)
+        support_action.triggered.connect(self.show_support_window)
+        menubar.addAction(support_action)
+
+    def show_support_window(self):
+        self.support_window = SupportWindow()
+        self.support_window.show()
 
     def show_inversion_help(self):
         self.inversion_help_window = HelpInversionWindow(self)

@@ -96,7 +96,7 @@ class GUI:
         preprocessing_layout.addWidget(filter_group)
 
         # Crear el botón para guardar el archivo filtrado
-        self.save_filtered_button = QPushButton("Crear Nuevo Archivo")
+        self.save_filtered_button = QPushButton("Guardar Curva Filtrada")
         self.save_filtered_button.clicked.connect(self.save_filtered_data)
         preprocessing_layout.addWidget(self.save_filtered_button)
 
