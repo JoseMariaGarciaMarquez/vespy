@@ -44,7 +44,7 @@ class SupportWindow(QWidget):
         layout.addWidget(label)
 
         button_patreon = QPushButton('Ir a Patreon', self)
-        button_patreon.clicked.connect(lambda: self.open_link("https://www.patreon.com/tu_pagina"))
+        button_patreon.clicked.connect(lambda: self.open_link("https://www.patreon.com/chemitas"))
         layout.addWidget(button_patreon)
 
         button_youtube = QPushButton('YouTube', self)
