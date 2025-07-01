@@ -50,6 +50,46 @@ from matplotlib.figure import Figure
 from data_analysis import Analysis
 from load import DataLoader
 from welcome import WelcomeWindow
+- load_data: Carga datos desde un archivo.
+- save_curve: Guarda la curva de resistividad suavizada.
+- save_inversion_table: Guarda la tabla del modelo de inversión.
+- realizar_empalme: Genera el empalme de los datos.
+- apply_filter: Aplica un filtro de suavizado.
+- plot_data: Grafica los datos de resistividad.
+- analyze_data: Realiza un análisis estadístico completo.
+- invert_model: Realiza la inversión de resistividad.
+- generate_2d_plot: Genera un gráfico 2D interpolado.
+- load_inverted_models: Carga modelos invertidos desde archivos.
+- save_2d_figure: Guarda la figura 2D generada.
+- find_water: Clasifica los datos para identificar posibles acuíferos.
+
+Variables de Almacenamiento:
+- self.data: Datos de resistividad cargados.
+- self.smoothed_data: Datos suavizados.
+- self.empalme_data: Datos de empalme.
+- self.saved_models: Modelos de capas invertidos.
+- self.loaded_models: Modelos cargados.
+- self.depths: Profundidades calculadas.
+- self.resistivity: Resistividades calculadas.
+- self.model_path: Ruta para guardar modelos.
+- self.distances, self.grid_x, self.grid_y, self.grid_z: Parámetros para el gráfico 2D.
+"""
+import sys
+import os
+import pandas as pd
+from pathlib import Path
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, 
+                             QTableWidget, QTableWidgetItem, QComboBox, QDoubleSpinBox, 
+                             QSpinBox, QLabel, QGroupBox, QToolBar, QAction, QPushButton, 
+                             QTabWidget, QTextEdit, QLineEdit, QInputDialog)
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from data_analysis import Analysis
+from load import DataLoader
+from welcome import WelcomeWindow
 from plot_ves import PlotVes
 from invert_ves import InvertVes
 from preprocessing import Preprocessing
@@ -201,7 +241,7 @@ class SEVApp(QMainWindow, GUI):
         self.data = self.data.apply(pd.to_numeric, errors='coerce')
 
         # Verificar que los encabezados sean correctos
-        required_columns = ['AB/2', 'MN/2', 'K', 'PN', 'PI', 'I (Ma)', '∆V (Mv)', 'pa (Ω*m)']
+        required_columns = ['AB/2', 'MN/2', 'K', 'PN', 'PI', 'I (Ma)', '∆V (Mv)', 'pa (Ω*m)']
         missing_columns = [col for col in required_columns if col not in self.data.columns]
         if missing_columns:
             self.data_loader.assign_columns(missing_columns)
@@ -259,6 +299,7 @@ class SEVApp(QMainWindow, GUI):
     def realizar_empalme(self):
         """Generar el empalme y almacenarlo internamente."""
         self.preprocessing.realizar_empalme()
+
 
     def save_model(self, x_position=None, y_position=None):
         """Guardar el modelo de inversión actual."""
@@ -355,10 +396,14 @@ class SEVApp(QMainWindow, GUI):
     def save_curve(self):
         """Guardar la curva suavizada en un archivo Excel."""
         if self.smoothed_data is not None:
-            self.data['Suavizado (Ω*m)'] = self.smoothed_data
+            self.data['Suavizado (Ω*m)'] = self.smoothed_data
             file_path, _ = QFileDialog.getSaveFileName(self, "Guardar Curva Suavizada", "", "Excel Files (*.xlsx *.xls)")
             if file_path:
                 self.data.to_excel(file_path, index=False)
+
+    def realizar_empalme(self):
+        """Generar el empalme y almacenarlo internamente."""
+        self.preprocessing.realizar_empalme()
 
     def apply_filter(self):
         """Aplicar el filtro de suavizado seleccionado a los datos."""
@@ -406,7 +451,7 @@ class SEVApp(QMainWindow, GUI):
         """Actualizar la tabla de inversión con espesores, profundidades y resistividades."""
         self.model_table.setRowCount(len(resistivity))
         self.model_table.setColumnCount(3)
-        self.model_table.setHorizontalHeaderLabels(["Espesor (m)", "Profundidad (m)", "Resistividad (Ω*m)"])
+        self.model_table.setHorizontalHeaderLabels(["Espesor (m)", "Profundidad (m)", "Resistividad (Ω*m)"])
         
         for i in range(len(resistivity)):
             if i < len(thickness):

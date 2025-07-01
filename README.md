@@ -1,29 +1,112 @@
-# VESPY - Visualización y Procesamiento de Datos de Sondeo Eléctrico Vertical (VES) en Python
+# VESPY - Visualización y Procesamiento de Datos de Sondeo Eléctrico Vertical
 
-## Descripción
-VESPY es una aplicación en Python diseñada para la visualización y el procesamiento de datos de Sondeo Eléctrico Vertical (VES). Ofrece herramientas para la carga, preprocesamiento, análisis e inversión de datos de resistividad, permitiendo una mejor interpretación geofísica.
+VESPY es una aplicación de escritorio desarrollada en Python que permite visualizar y procesar datos de Sondeo Eléctrico Vertical (VES) para estudios geofísicos. La aplicación incluye herramientas para análisis de datos, inversión de resistividad, y generación de gráficos 2D para interpretación geológica.
 
-## Características Principales
-- **Interfaz intuitiva:** Ventana principal con título "VESPY" y dimensiones de 1600x900 píxeles.
-- **Gestor de archivos:** Permite cargar datos de resistividad desde archivos Excel y guardar curvas y modelos invertidos.
-- **Preprocesamiento de datos:** Funciones para empalme y suavizado de datos.
-- **Procesamiento de datos:** Inversión de resistividad para modelado geofísico.
-- **Visualización avanzada:** Gráficos de curvas de resistividad, empalme de datos, análisis estadístico, resultados de inversión y representación 2D.
-- **Terminal integrada:** Muestra estadísticas descriptivas y análisis de datos.
-- **Tablas interactivas:** Visualización y edición de los datos cargados y del modelo de inversión.
+## 🎯 Características Principales
 
-## Requisitos Previos
+### 🔧 Procesamiento de Datos
+- Carga datos desde archivos Excel (.xlsx, .xls), CSV (.csv) y LibreOffice Calc (.ods)
+- Verificación automática de formatos de columnas requeridas
+- Promediado de datos con mismo AB/2 pero diferente MN/2 (empalme)
+- Filtros de suavizado: Media Móvil, Savitzky-Golay, Exponencial
+
+### 📊 Análisis Estadístico
+- Estadísticas descriptivas completas
+- Análisis de frecuencias y distribuciones
+- Análisis de Fourier (FFT) para identificar periodicidades
+- Detección automática de outliers
+- Recomendaciones de preprocesamiento
+
+### ⚙️ Inversión de Resistividad
+- Algoritmos de inversión: Occam's razor y Levenberg-Marquardt
+- Configuración personalizable de parámetros (número de capas, lambda, factor lambda)
+- Cálculo automático del Error Cuadrático Medio (RMSE)
+- Visualización de resultados de inversión
+
+### 🎨 Visualización Avanzada
+- Gráficos de curvas de resistividad aparente vs AB/2
+- Gráficos de empalme y datos suavizados
+- Gráficos 2D interpolados con múltiples algoritmos
+- Múltiples mapas de colores (jet, rainbow, viridis, plasma, etc.)
+- **NUEVO**: Interfaz moderna con temas claro y oscuro
+- **NUEVO**: Barra de herramientas profesional con iconos y tooltips
+- **NUEVO**: Paneles redimensionables y organizados
+- Exportación de figuras en alta resolución
+
+### 🔍 Clasificación de Acuíferos
+- Análisis automático para identificar posibles acuíferos
+- Clasificación basada en valores de resistividad
+- Recomendaciones de profundidad de perforación
+
+### ✨ Características de la Interfaz Mejorada
+
+#### 🎨 Diseño Profesional
+- **Tema Claro y Oscuro**: Alterne entre temas con un solo clic
+- **Barra de Estado Inteligente**: Muestra progreso, información del archivo y hora actual
+- **Paneles Redimensionables**: Splitters para ajustar el tamaño de cada panel
+- **Scrollbars Estilizados**: Diseño moderno y funcional
+
+#### ⌨️ Atajos de Teclado
+- `Ctrl+O`: Cargar datos
+- `Ctrl+S`: Guardar tabla
+- `F5`: Invertir modelo
+- `F6`: Generar gráfico 2D
+- `F7`: Clasificar agua
+
+#### 🛠️ Herramientas Avanzadas
+- **Auto-guardado**: Guarda automáticamente cada 5 minutos
+- **Barra de Progreso**: Seguimiento visual de operaciones
+- **Tooltips Informativos**: Ayuda contextual en cada herramienta
+- **Iconos con Emojis**: Navegación visual intuitiva
+
+## Instalación y Configuración
+
+### **Opción 1: Instalación Automática (Recomendada)**
+Ejecuta uno de los siguientes scripts para configurar automáticamente el entorno:
+
+**Windows (Batch):**
+```batch
+install.bat
+```
+
+**Windows (PowerShell):**
+```powershell
+.\install.ps1
+```
+
+### **Opción 2: Instalación Manual**
 Para ejecutar VESPY, es necesario tener activado el ambiente `pg` de `pygimli`. Sigue estos pasos para configurarlo:
-```markdown
-# Instalar pygimli si no lo tienes
+
+```bash
+# 1. Instalar pygimli
 conda create -n pg -c gimli -c conda-forge "pygimli>=1.5.0"
 
-# Activar el ambiente
+# 2. Activar el ambiente
 conda activate pg
 
-# Instalar dependencias adicionales
-pip install numpy pandas matplotlib scipy tkinter
+# 3. Instalar dependencias adicionales
+pip install -r requirements.txt
 ```
+
+### **Ejecución**
+Una vez instaladas las dependencias:
+```bash
+# Activar el entorno
+conda activate pg
+
+# Ejecutar VESPY
+python src/vespy.py
+```
+
+## Dependencias
+- **PyQt5** (>=5.15.0) - Interfaz gráfica
+- **pandas** (>=1.3.0) - Manipulación de datos
+- **numpy** (>=1.21.0) - Cálculos numéricos
+- **matplotlib** (>=3.4.0) - Visualización
+- **seaborn** (>=0.11.0) - Gráficos estadísticos
+- **scipy** (>=1.7.0) - Procesamiento científico
+- **pygimli** (>=1.5.0) - Inversión geofísica
+- **odfpy** (>=1.4.0) - Lectura de archivos LibreOffice
 
 ## Nota sobre la Estructura de Archivos
 VESPY ahora está organizado en una carpeta con la siguiente estructura:

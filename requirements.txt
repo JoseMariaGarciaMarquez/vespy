@@ -1,0 +1,33 @@
+# VESPY - Visualización y Procesamiento de Datos de Sondeo Eléctrico Vertical (VES)
+# Archivo de requisitos para instalación de dependencias
+
+# Interfaz gráfica
+PyQt5>=5.15.0
+
+# Análisis de datos y manipulación
+pandas>=1.3.0
+numpy>=1.21.0
+
+# Visualización y gráficos
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Procesamiento científico
+scipy>=1.7.0
+
+# Inversión geofísica (requiere instalación especial con conda)
+# pygimli>=1.5.0  # Instalar con: conda create -n pg -c gimli -c conda-forge "pygimli>=1.5.0"
+
+# Lectura de archivos LibreOffice
+odfpy>=1.4.0
+
+# Sistema y utilidades
+pathlib2>=2.3.0
+
+# Instalación de dependencias:
+# 1. Crear ambiente conda para pygimli:
+#    conda create -n pg -c gimli -c conda-forge "pygimli>=1.5.0"
+# 2. Activar el ambiente:
+#    conda activate pg
+# 3. Instalar dependencias adicionales:
+#    pip install -r requirements.txt
