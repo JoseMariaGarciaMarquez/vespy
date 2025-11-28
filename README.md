@@ -1,208 +1,323 @@
-# VESPY - Visualización y Procesamiento de Datos de Sondeo Eléctrico Vertical
+# VESPY - Vertical Electrical Sounding in Python
 
-VESPY es una aplicación de escritorio desarrollada en Python que permite visualizar y procesar datos de Sondeo Eléctrico Vertical (VES) para estudios geofísicos. La aplicación incluye herramientas para análisis de datos, inversión de resistividad, y generación de gráficos 2D para interpretación geológica.
+![VESPY Banner](images/logo.png)
 
-## 🎯 Características Principales
+VESPY es una aplicación de escritorio moderna y potente desarrollada en Python para el análisis completo de datos de Sondeos Eléctricos Verticales (SEV/VES). Diseñada para geofísicos, hidrogeólogos e investigadores, VESPY ofrece un flujo de trabajo completo desde la carga de datos hasta la generación de perfiles 2D interpolados.
 
-### 🔧 Procesamiento de Datos
-- Carga datos desde archivos Excel (.xlsx, .xls), CSV (.csv) y LibreOffice Calc (.ods)
-- Verificación automática de formatos de columnas requeridas
-- Promediado de datos con mismo AB/2 pero diferente MN/2 (empalme)
-- Filtros de suavizado: Media Móvil, Savitzky-Golay, Exponencial
+---
 
-### 📊 Análisis Estadístico
-- Estadísticas descriptivas completas
-- Análisis de frecuencias y distribuciones
-- Análisis de Fourier (FFT) para identificar periodicidades
-- Detección automática de outliers
-- Recomendaciones de preprocesamiento
+## 🌟 Características Principales
 
-### ⚙️ Inversión de Resistividad
-- Algoritmos de inversión: Occam's razor y Levenberg-Marquardt
-- Configuración personalizable de parámetros (número de capas, lambda, factor lambda)
-- Cálculo automático del Error Cuadrático Medio (RMSE)
-- Visualización de resultados de inversión
+### 📂 Carga de Datos Inteligente
 
-### 🎨 Visualización Avanzada
-- Gráficos de curvas de resistividad aparente vs AB/2
-- Gráficos de empalme y datos suavizados
-- Gráficos 2D interpolados con múltiples algoritmos
-- Múltiples mapas de colores (jet, rainbow, viridis, plasma, etc.)
-- **NUEVO**: Interfaz moderna con temas claro y oscuro
-- **NUEVO**: Barra de herramientas profesional con iconos y tooltips
-- **NUEVO**: Paneles redimensionables y organizados
-- Exportación de figuras en alta resolución
+- **Mapeo interactivo de columnas**: Diálogo intuitivo para mapear columnas de archivos con nombres no estándar
+- **Detección automática**: Reconoce automáticamente columnas AB/2, MN/2 y resistividad aparente
+- **Formatos soportados**: Excel (.xlsx, .xls), CSV (.csv), TXT separado por tabuladores
+- **Limpieza automática**: Elimina espacios en blanco y valores nulos
 
-### 🔍 Clasificación de Acuíferos
-- Análisis automático para identificar posibles acuíferos
-- Clasificación basada en valores de resistividad
-- Recomendaciones de profundidad de perforación
+### 🔧 Preprocesamiento de Datos
 
-### ✨ Características de la Interfaz Mejorada
+- **Empalme (Averaging)**: Promedia datos con mismo AB/2 pero diferente MN/2 para eliminar duplicados
+- **Filtros de suavizado**:
+  - 📊 Media Móvil: Reduce ruido preservando tendencias
+  - 📈 Savitzky-Golay: Suavizado polinomial avanzado
+  - 📉 Exponencial: Suavizado adaptativo exponencial
+- **Flujo coherente**: Los datos preprocesados se usan automáticamente en la inversión
 
-#### 🎨 Diseño Profesional
-- **Tema Claro y Oscuro**: Alterne entre temas con un solo clic
-- **Barra de Estado Inteligente**: Muestra progreso, información del archivo y hora actual
-- **Paneles Redimensionables**: Splitters para ajustar el tamaño de cada panel
-- **Scrollbars Estilizados**: Diseño moderno y funcional
+### ⚡ Inversión de Resistividad
 
-#### ⌨️ Atajos de Teclado
-- `Ctrl+O`: Cargar datos
-- `Ctrl+S`: Guardar tabla
-- `F5`: Invertir modelo
-- `F6`: Generar gráfico 2D
-- `F7`: Clasificar agua
+- **PyGIMLi integrado**: Inversión de alta calidad con VESManager
+- **Algoritmo de Occam**: Busca el modelo más simple que explique los datos
+- **Parámetros configurables**:
+  - Número de capas (1-20)
+  - Lambda (λ): Factor de regularización (1-100)
+  - Factor Lambda: Reducción por iteración (0.5-1.0)
+- **Métricas de calidad**: Chi² y RMS para evaluar el ajuste
+- **Fallback inteligente**: Inversión simple si PyGIMLi no está disponible
 
-#### 🛠️ Herramientas Avanzadas
-- **Auto-guardado**: Guarda automáticamente cada 5 minutos
-- **Barra de Progreso**: Seguimiento visual de operaciones
-- **Tooltips Informativos**: Ayuda contextual en cada herramienta
-- **Iconos con Emojis**: Navegación visual intuitiva
+### 📊 Análisis Estadístico Avanzado
 
-## Instalación y Configuración
+- Estadísticas descriptivas (media, mediana, desviación estándar)
+- Análisis de asimetría y curtosis
+- Transformada de Fourier (FFT) para detectar periodicidades
+- Visualización con histogramas, boxplots y scatter plots
+- Identificación de valores atípicos
 
-### **Opción 1: Instalación Automática (Recomendada)**
-Ejecuta uno de los siguientes scripts para configurar automáticamente el entorno:
+### 🎨 Visualización de Alta Calidad
 
-**Windows (Batch):**
-```batch
-install.bat
-```
+- **Gráfico de curvas**: Visualiza datos originales, empalme y suavizado en escala log-log
+- **Análisis estadístico**: Múltiples gráficos estadísticos en una sola vista
+- **Resultados de inversión**: Ajuste del modelo y perfil 1D de capas
+- **Perfiles 2D interpolados**:
+  - Interpolación lineal, cúbica o vecino más cercano
+  - Mapas de colores profesionales (jet, rainbow, viridis, plasma, inferno, magma)
+  - Marcadores de posición de SEV
+  - Exportación en alta resolución
 
-**Windows (PowerShell):**
-```powershell
-.\install.ps1
-```
+### 💾 Gestión de Modelos
 
-### **Opción 2: Instalación Manual**
-Para ejecutar VESPY, es necesario tener activado el ambiente `pg` de `pygimli`. Sigue estos pasos para configurarlo:
+- **Guardar modelos con posición X**: Sistema de coordenadas para perfiles 2D
+- **Sugerencias inteligentes**: Auto-sugiere posiciones (0, 20, 40, 60...)
+- **Múltiples modelos**: Almacena varios modelos invertidos para perfiles
+- **Exportación**: Guarda modelos en formato estructurado
+
+### 📚 Tutorial Notebooks
+
+VESPY incluye una serie completa de tutoriales Jupyter para enseñar procesamiento de SEV paso a paso:
+
+- **01_Introduccion_SEV.ipynb**: Conceptos básicos y teoría de SEV
+- **02_Preprocesamiento_SEV.ipynb**: Empalme, filtros y limpieza de datos
+- **03_Inversion_PyGIMLi.ipynb**: Inversión avanzada con PyGIMLi, parámetros y evaluación
+- **04_Visualizacion_2D.ipynb**: Generación de perfiles 2D interpolados
+
+### ✨ Interfaz de Usuario Moderna
+
+- **Diseño horizontal optimizado**: Proporción 18:57:25 (controles:gráficos:tablas)
+- **Iconos emoji**: Sin dependencia de archivos de imágenes externos
+- **Pestañas organizadas**: Navegación clara entre diferentes vistas
+- **Terminal integrado**: Feedback en tiempo real de operaciones
+- **Tablas interactivas**: Visualiza datos cargados y modelos invertidos
+
+---
+
+## 🚀 Instalación y Configuración
+
+### Requisitos Previos
+
+- Python 3.8 o superior
+- Conda (Anaconda o Miniconda)
+- Windows, macOS o Linux
+
+### Instalación con Conda (Recomendado)
 
 ```bash
-# 1. Instalar pygimli
-conda create -n pg -c gimli -c conda-forge "pygimli>=1.5.0"
+# 1. Crear entorno con PyGIMLi
+conda create -n vespy -c gimli -c conda-forge pygimli
 
-# 2. Activar el ambiente
-conda activate pg
+# 2. Activar el entorno
+conda activate vespy
 
-# 3. Instalar dependencias adicionales
-pip install -r requirements.txt
+# 3. Instalar dependencias
+pip install PyQt5 pandas numpy matplotlib seaborn scipy
 ```
 
-### **Ejecución**
-Una vez instaladas las dependencias:
+### Instalación sin PyGIMLi (Funcionalidad Limitada)
+
+Si no puedes instalar PyGIMLi, VESPY funcionará con inversión simplificada:
+
+```bash
+# Crear entorno Python
+python -m venv vespy-env
+
+# Activar entorno (Windows)
+vespy-env\Scripts\activate
+
+# Activar entorno (Linux/macOS)
+source vespy-env/bin/activate
+
+# Instalar dependencias básicas
+pip install PyQt5 pandas numpy matplotlib seaborn scipy
+```
+
+### Ejecutar VESPY
+
 ```bash
 # Activar el entorno
-conda activate pg
+conda activate vespy
 
-# Ejecutar VESPY
+# Ejecutar la aplicación
 python src/vespy.py
 ```
 
-## Dependencias
-- **PyQt5** (>=5.15.0) - Interfaz gráfica
-- **pandas** (>=1.3.0) - Manipulación de datos
+---
+
+## 📦 Dependencias
+
+### Obligatorias
+
+- **PyQt5** (>=5.15.0) - Interfaz gráfica moderna
+- **pandas** (>=1.3.0) - Manipulación y análisis de datos
 - **numpy** (>=1.21.0) - Cálculos numéricos
-- **matplotlib** (>=3.4.0) - Visualización
-- **seaborn** (>=0.11.0) - Gráficos estadísticos
-- **scipy** (>=1.7.0) - Procesamiento científico
-- **pygimli** (>=1.5.0) - Inversión geofísica
-- **odfpy** (>=1.4.0) - Lectura de archivos LibreOffice
+- **matplotlib** (>=3.4.0) - Visualización de gráficos
+- **seaborn** (>=0.11.0) - Gráficos estadísticos avanzados
+- **scipy** (>=1.7.0) - Procesamiento científico e interpolación
 
-## Nota sobre la Estructura de Archivos
-VESPY ahora está organizado en una carpeta con la siguiente estructura:
+### Opcionales
+
+- **pygimli** (>=1.5.0) - Inversión geofísica de alta calidad (recomendado)
+
+---
+
+## 📁 Estructura del Proyecto
+
+```text
+vespy/
+├── src/
+│   └── vespy.py           # Aplicación principal (monolítica)
+├── notebooks/
+│   ├── 01_Introduccion_SEV.ipynb
+│   ├── 02_Preprocesamiento_SEV.ipynb
+│   ├── 03_Inversion_PyGIMLi.ipynb
+│   └── 04_Visualizacion_2D.ipynb
+├── images/
+│   └── logo.png
+├── aditional-data/
+│   └── members.csv        # Datos de ejemplo
+├── README.md
+└── LICENSE
 ```
-project_folder/
-│── src/
-│   ├── vespy.py
-│── images/
+
+---
+
+## 📋 Formato de Datos
+
+VESPY acepta archivos con las siguientes columnas (nombres flexibles gracias al mapeo interactivo):
+
+**Columnas requeridas:**
+
+- **AB/2**: Espaciamiento del arreglo de corriente (metros)
+- **pa (Ω·m)**: Resistividad aparente (ohm-metro)
+
+**Columnas opcionales:**
+
+- **MN/2**: Espaciamiento del arreglo de potencial (metros)
+- Otras columnas son ignoradas automáticamente
+
+**Ejemplo de formato:**
+
+```csv
+AB/2,MN/2,pa (Ω*m)
+1.5,0.5,45.2
+2.0,0.5,52.3
+3.0,0.5,68.5
+4.5,0.5,85.2
 ```
 
-## Formato de Datos Requerido
-Para garantizar un correcto procesamiento, los datos deben estar en el siguiente formato:
+💡 **Nota**: Si tus columnas tienen nombres diferentes (ej: "Resistividad", "Espaciamiento"), el diálogo de mapeo te permitirá seleccionarlas manualmente.
+
+---
+
+## 🔧 Flujo de Trabajo
+
+### 1️⃣ Cargar Datos
+
+```text
+📂 Cargar → Seleccionar archivo → Mapear columnas → ✅ Datos cargados
 ```
-AB/2    MN/2    K    PN    PI    I (Ma)    ∆V (Mv)    pa (Ω*m)
+
+### 2️⃣ Preprocesar (Opcional)
+
+```text
+🔗 Empalme: Promediar datos con mismo AB/2
+✨ Suavizado: Aplicar filtro para reducir ruido
 ```
 
-## Funcionalidades
-### **Carga y Guardado de Datos**
-- `load_data()`: Carga datos desde un archivo Excel.
-- `save_curve()`: Guarda la curva de resistividad suavizada.
-- `save_inversion_table()`: Guarda la tabla del modelo de inversión.
-- `load_inverted_models()`: Carga modelos invertidos desde archivos.
-- `save_model()`: Guarda el modelo de inversión actual.
-- `save_inversion_model()`: Guarda el modelo de inversión sin expandir los puntos.
+**⚠️ Importante**: Los datos preprocesados se usan automáticamente en la inversión.
 
-### **Preprocesamiento de Datos**
-- `realizar_empalme()`: Genera el empalme de los datos.
-- `apply_filter()`: Aplica un filtro de suavizado.
+### 3️⃣ Invertir
 
-### **Procesamiento y Análisis**
-- `analyze_data()`: Realiza un análisis estadístico completo.
-- `invert_model()`: Realiza la inversión de resistividad.
-- `find_water()`: Clasifica los datos para identificar posibles acuíferos.
-
-### **Visualización Gráfica**
-- `plot_data()`: Grafica los datos de resistividad.
-- `generate_2d_plot()`: Genera un gráfico 2D interpolado.
-- `plot_classified_layers()`: Visualiza el modelo con clasificaciones litológicas.
-
-## Variables de Almacenamiento
-- `self.data`: Datos de resistividad cargados.
-- `self.smoothed_data`: Datos suavizados.
-- `self.empalme_data`: Datos de empalme.
-- `self.saved_models`: Modelos de capas invertidos.
-- `self.loaded_models`: Modelos cargados.
-- `self.depths`: Profundidades calculadas.
-- `self.resistivity`: Resistividades calculadas.
-- `self.model_path`: Ruta para guardar modelos.
-- `self.distances`, `self.grid_x`, `self.grid_y`, `self.grid_z`: Parámetros para el gráfico 2D.
-
-## Instalación y Uso
-1. **Ejecutar la aplicación:**
-   ```markdown
-   python src/vespy.py
-   ```
-
-## Contribución
-Si deseas contribuir a VESPY, puedes hacer un fork del repositorio, realizar mejoras y enviar un pull request.
-
-## Licencia
-Este proyecto está bajo la licencia MIT.
-
-## PATREON
-```markdown
-Apoya el desarrollo continuo de VESPY uniéndote a nuestra comunidad en Patreon. Cada nivel de apoyo viene con beneficios exclusivos:
-
-    Gratis: Acceso limitado a funcionalidades básicas.
-    Café: Ayúdanos con un café y accede a actualizaciones de desarrollo.
-    Principiante: Disfruta de acceso anticipado a nuevas funciones.
-    Frecuencias: Obtén soporte prioritario y acceso completo a todas las herramientas avanzadas.
-
-Lista de patrocinadores actuales
-Café:
-    Jorge Mario Manjarres Contreras ☕
-
-Gratis:
-    Christhofer Omar Urquizo Quiroz
-    José David Sanabria Gómez
-    Antonio Suero Moreno
-    Pablo Armando Topes Rojas
-    Diego Gonzalez
-    Francisco Lopez
-    Timeslice
-    Esthefany Astudillo
-    Cursos Olegario
-    RODRIGO TELLO
-    Abril Fuentes
-    Arturo Ortiz
-    Reis dedektor yeralti goruntuleme
-    Velnia Chacca Luna
-    Jorge Mario Manjarres Contreras
-    Gustavo Medina
-    Jorge Victor Obregon Leon
-    Leonardo Nicolas Quispe Mendoza
-    Ricardo Pizarro
-    Homero Loaiza Sanchez
-    Jesús Limón
-    Erik Robinson Trincado Cabezas
+```text
+⚡ Configurar parámetros → Inversión → 📊 Modelo de capas 1D
 ```
+
+### 4️⃣ Guardar Modelo
+
+```text
+💾 Guardar con posición X → Repetir para múltiples SEV
+```
+
+### 5️⃣ Generar Perfil 2D
+
+```text
+🗺️ Interpolación → Visualización 2D → 💾 Exportar PNG
+```
+
+---
+
+## 🎓 Tutoriales Jupyter
+
+Los notebooks en la carpeta `notebooks/` cubren:
+
+1. **01_Introduccion_SEV**: Teoría de SEV, configuración Schlumberger, interpretación de curvas
+2. **02_Preprocesamiento_SEV**: Técnicas de empalme, filtros de suavizado, detección de outliers
+3. **03_Inversion_PyGIMLi**: Uso de PyGIMLi, parámetros de regularización, evaluación de ajuste
+4. **04_Visualizacion_2D**: Interpolación espacial, generación de perfiles, exportación
+
+---
+
+## 🤝 Contribución
+
+¡Las contribuciones son bienvenidas! Si deseas mejorar VESPY:
+
+1. Haz un fork del repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abre un Pull Request
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detalles.
+
+---
+
+## ☕ Apoya el Proyecto
+
+[![Patreon](https://img.shields.io/badge/Patreon-Support%20VESPY-orange?style=for-the-badge&logo=patreon)](https://www.patreon.com/chemitas)
+
+Si VESPY te resulta útil, considera apoyar su desarrollo:
+
+- ☕ **Café**: Apoyo básico y acceso a actualizaciones
+- 🌱 **Principiante**: Acceso anticipado a nuevas funciones
+- ⚡ **Frecuencias**: Soporte prioritario y herramientas avanzadas
+
+### 🏆 Patrocinadores
+
+**Nivel Café ☕:**
+
+- Jorge Mario Manjarres Contreras
+
+**Comunidad 🌟:**
+
+- Christhofer Omar Urquizo Quiroz
+- José David Sanabria Gómez
+- Antonio Suero Moreno
+- Pablo Armando Topes Rojas
+- Diego Gonzalez
+- Francisco Lopez
+- Timeslice
+- Esthefany Astudillo
+- Cursos Olegario
+- RODRIGO TELLO
+- Abril Fuentes
+- Arturo Ortiz
+- Reis dedektor yeralti goruntuleme
+- Velnia Chacca Luna
+- Gustavo Medina
+- Jorge Victor Obregon Leon
+- Leonardo Nicolas Quispe Mendoza
+- Ricardo Pizarro
+- Homero Loaiza Sanchez
+- Jesús Limón
+- Erik Robinson Trincado Cabezas
+
+---
+
+## 📧 Contacto
+
+**Autor**: Jose Maria Garcia Marquez  
+**Email**: josemariagarciamarquez2.72@gmail.com  
+**Web**: [josemariagarciamarquez.github.io/webjoma](https://josemariagarciamarquez.github.io/webjoma/)  
+**GitHub**: [@JoseMariaGarciaMarquez](https://github.com/JoseMariaGarciaMarquez)  
+**Patreon**: [patreon.com/chemitas](https://www.patreon.com/chemitas)
+
+---
+
+<div align="center">
+
+**VESPY** - Vertical Electrical Sounding in Python  
+*Desarrollado con ❤️ para la comunidad geofísica*
+
+</div>

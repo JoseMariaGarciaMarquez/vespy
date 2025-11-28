@@ -169,3 +169,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Project specific folders
+otros/
+respaldo/
+dlc_vespy/
